@@ -3219,3 +3219,33 @@ input, select, textarea {
 			}
 
 	}
+
+/* Skill Tags Custom CSS */
+
+.skill-container{
+	max-width: 100%;
+  	width: 100%;
+	margin-top: 10px;
+  }
+  
+.skill-tag {
+	background: #7B3F00	;
+	color: white;
+	display: inline-block;
+	padding: 5px 10px 5px 25px;
+	border-radius: 90px 30px 30px 90px;
+	position: relative;
+	margin: 0 5px 5px 0;
+	font-family: inherit;
+	font-size: 0.8em;
+}
+.skill-tag:after {
+	content: '';
+	width: 8px;
+	height: 8px;
+	background: white;
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	border-radius: 90px;
+}
