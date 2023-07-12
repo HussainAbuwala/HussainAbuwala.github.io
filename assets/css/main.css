@@ -2443,10 +2443,10 @@ input, select, textarea {
 		-webkit-transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 		-ms-transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 		transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-		background-color: transparent;
+		background-color: #6F4E37;
 		border-radius: 0.35em;
 		border: solid 3px #efefef;
-		color: #787878 !important;
+		color: white !important;
 		cursor: pointer;
 		display: inline-block;
 		font-weight: 400;
@@ -3248,4 +3248,18 @@ input, select, textarea {
 	top: 10px;
 	left: 10px;
 	border-radius: 90px;
+}
+
+#resume-btn{
+	background: #6F4E37;
+	color: white;
+	width: 130px;
+	text-align: center;
+	font-size: 1.3em;
+	border-color: transparent;
+
+}
+
+.preview{
+	color: #6F4E37;
 }
