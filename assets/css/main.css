@@ -3267,13 +3267,19 @@ input, select, textarea {
 .inline-container{
 	display: flex;
   	align-items: center; /* Center items vertically */
-	padding: 5px;
+	margin-top: 20px;
 }
 
 .inline-container-title{
 	font-size: 1.25em;
 	margin-right: 5px;
 	font-style: italic;
-	width: 150px;
+	width: 200px;
 	color: #6F4E37
+}
+
+.image-container{
+	display: flex;
+  	align-items: center;
+	flex-wrap: wrap;
 }
