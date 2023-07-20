@@ -3263,3 +3263,17 @@ input, select, textarea {
 .preview{
 	color: #6F4E37;
 }
+
+.inline-container{
+	display: flex;
+  	align-items: center; /* Center items vertically */
+	padding: 5px;
+}
+
+.inline-container-title{
+	font-size: 1.25em;
+	margin-right: 5px;
+	font-style: italic;
+	width: 150px;
+	color: #6F4E37
+}
