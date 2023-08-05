@@ -3286,22 +3286,25 @@ input, select, textarea {
 
 }
 
-.dropdown-header{
-	font-size: 1.1em;
+.header-title{
 	font-style: italic;
 	color: #6F4E37;
+	font-weight:900;
+	font-size: 1.1em;
+	text-decoration: underline;
 }
 
 .dropdown-item{
 	background-color: #C19A6B;
 	color: white;
+	margin-top: 2px;
 }
 
-  .dropdown-menu {
+.dropdown-menu {
 	display: none;
 	text-align: center;
-  }
+}
   
-  .icon-container:hover .dropdown-menu {
+.icon-container:hover .dropdown-menu {
 	display: block;
-  }
+}
