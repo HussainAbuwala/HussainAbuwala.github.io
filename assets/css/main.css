@@ -3285,3 +3285,23 @@ input, select, textarea {
 	width: 500px;
 
 }
+
+.dropdown-header{
+	font-size: 1.1em;
+	font-style: italic;
+	color: #6F4E37;
+}
+
+.dropdown-item{
+	background-color: #C19A6B;
+	color: white;
+}
+
+  .dropdown-menu {
+	display: none;
+	text-align: center;
+  }
+  
+  .icon-container:hover .dropdown-menu {
+	display: block;
+  }
