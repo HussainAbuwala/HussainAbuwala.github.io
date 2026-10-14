@@ -28,7 +28,12 @@
 
   /* ---------- videos: YouTube loads only after a click ---------- */
   document.querySelectorAll('button.video[data-yt]').forEach(function (b) {
-    b.style.backgroundImage = 'url(https://i.ytimg.com/vi/' + b.dataset.yt + '/hqdefault.jpg)';
+    // full-HD thumbnail when the video has one; YouTube serves a 120px placeholder when it doesn't
+    var thumb = 'https://i.ytimg.com/vi/' + b.dataset.yt + '/';
+    b.style.backgroundImage = 'url(' + thumb + 'hqdefault.jpg)';
+    var hd = new Image();
+    hd.onload = function () { if (hd.naturalWidth > 120) b.style.backgroundImage = 'url(' + hd.src + ')'; };
+    hd.src = thumb + 'maxresdefault.jpg';
     b.addEventListener('click', function () {
       var f = document.createElement('iframe');
       f.src = 'https://www.youtube-nocookie.com/embed/' + b.dataset.yt + '?autoplay=1&rel=0';
