@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suggested Questions · Hussain Abuwala</title>
+<meta name="description" content="How IBM watsonx BI suggests questions that are guaranteed to have an answer: generate with an LLM, then validate each one by answering it on the real data.">
+<link rel="canonical" href="https://hussainabuwala.github.io/work/suggested-questions/">
+<link rel="stylesheet" href="/assets/tufte.css?v=5006481b">
+<style>
+  table.booktabs.wide { width: 90%; font-size: 1.1rem; line-height: 1.5; }
+  table.booktabs.wide td { padding-bottom: .45rem; }
+  ul li { padding: .3rem 0; }
+  .flow { font-family: var(--lf); font-size: 1.25rem; color: var(--soft); margin: 1rem 0 1.4rem; }
+  @media (min-width: 761px) { table.booktabs.wide td:first-child { white-space: nowrap; } }
+</style>
+</head>
+<body>
+<article>
+  <div class="back"><a href="/">← Hussain Abuwala</a></div>
+  <h1>Suggested Questions</h1>
+  <p class="subtitle">Questions that are guaranteed to have an answer. IBM, 2024–2025.</p>
+
+  <section>
+    <p><span class="newthought">When someone opens a dataset</span> in IBM watsonx BI, they see a few questions they can ask right away, written for that dataset. We built the service that writes them with an LLM and checks, before showing any of them, that each one actually returns an answer.</p>
+    <p class="tools">Node.js · TypeScript · LLMs · RabbitMQ · Docker · Kubernetes</p>
+  </section>
+
+  <section>
+    <h2>Why it matters</h2>
+    <p>Faced with a new dataset, most people do not know what to ask. Suggested questions are often their first interaction with the product. A good one shows what the data can answer. A suggested question that fails is worse than none: it teaches the user not to trust the product before they have asked anything themselves.</p>
+  </section>
+
+  <section>
+    <h2>The problem</h2>
+    <p>An LLM can easily write questions that sound right for a dataset. Many of them fail when you actually try to answer them:</p>
+    <ul>
+      <li>no query can be written for the question, because it asks for something the data does not hold;</li>
+      <li>the query is written but is invalid and fails;</li>
+      <li>the query runs but returns no data, for example because a filter matches nothing.</li>
+    </ul>
+    <p>From the question alone there is no way to tell which ones will work.</p>
+  </section>
+
+  <section>
+    <h2>The solution</h2>
+
+    <h3>Questions written from what the data means</h3>
+    <p>Questions are generated from the dataset’s enriched description: readable column names, descriptions, and which columns are numbers and which are categories. A question then combines a meaningful number with a meaningful breakdown, such as revenue by region, instead of pairing columns at random.</p>
+
+    <h3>Every question is answered before it is shown</h3>
+    <p>Each generated question goes through the same path a user’s question would:</p>
+    <p class="flow">question → SQL → checked → run on the real data → answer</p>
+    <table class="booktabs wide">
+      <thead><tr><th>Outcome</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td>Answer returned</td><td>The question is kept and can be suggested</td></tr>
+        <tr><td>No SQL could be written</td><td>Dropped</td></tr>
+        <tr><td>The SQL failed</td><td>Dropped</td></tr>
+        <tr><td>No data returned</td><td>Dropped</td></tr>
+      </tbody>
+    </table>
+    <p>Only questions with a real answer are ever shown. The others are recorded with the reason they failed, which shows where generation needs to improve.</p>
+
+    <h3>One query format for many databases</h3>
+    <p>Datasets can live in different databases, and each one speaks its own dialect of SQL. Rather than teaching the model every dialect, the model writes SQL in one format, guided by examples in the prompt. Code then fixes common mistakes in its output, such as how limits, column aliases and date intervals are written. The result is converted to an intermediate query format, which another service translates into each database’s own SQL.</p>
+
+    <h3>Bounded work</h3>
+    <ul>
+      <li>Validation stops as soon as there are enough good questions.</li>
+      <li>An overall time limit cancels whatever has not finished.</li>
+      <li>The number of model requests running at the same time is limited, so a large batch of datasets cannot overload the model service.</li>
+      <li>Datasets with too little in them to ask anything useful are skipped.</li>
+    </ul>
+
+    <h3>Prepared ahead of time</h3>
+    <p>Questions are generated and validated in the background, once the dataset has been enriched. The results are stored and cached, so they appear instantly when someone opens the dataset.</p>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+    <p>Users get a guided first interaction with every dataset, using questions that are known to return an answer. The service won an IBM Outstanding Innovation Award.</p>
+  </section>
+
+  <footer class="colophon"><a href="/">Hussain Abuwala</a></footer>
+</article>
+<script src="/assets/synonyms.js?v=2e1f3543"></script>
+<script src="/assets/site.js?v=6a29193d"></script>
+</body>
+</html>

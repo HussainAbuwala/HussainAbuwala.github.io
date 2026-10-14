@@ -1,0 +1,198 @@
+/* ------------------------------------------------------------------
+   Site styles, after Edward Tufte's books and tufte-css.
+   Text sits in the left ~55%; sidenotes, margin notes and margin
+   figures float into a wide right margin, level with what they explain.
+------------------------------------------------------------------- */
+@font-face { font-family: 'ET Book'; src: url('/assets/fonts/et-book-roman-old-style-figures.woff') format('woff'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'ET Book'; src: url('/assets/fonts/et-book-display-italic-old-style-figures.woff') format('woff'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'ET Book'; src: url('/assets/fonts/et-book-bold-line-figures.woff') format('woff'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'ET Book LF'; src: url('/assets/fonts/et-book-roman-line-figures.woff') format('woff'); font-weight: 400; font-style: normal; font-display: swap; }
+
+:root {
+  --bg: #ffffff;
+  --ink: #111111;
+  --soft: #5e5e5e;
+  --faint: #a6a6a6;
+  --hair: #e4e4e1;
+  --red: #a3341f;            /* marks what changed, broke, or is relevant */
+  --mark: #fbeee9;
+  --serif: 'ET Book', Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  --lf: 'ET Book LF', 'ET Book', Palatino, Georgia, serif;
+  --mono: Consolas, 'Liberation Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { font-size: 15px; -webkit-text-size-adjust: 100%; }
+body { margin: 0 auto; padding: 0 0 0 12.5%; width: 87.5%; max-width: 1400px; background: var(--bg); color: var(--ink); font-family: var(--serif); counter-reset: sidenote-counter; -webkit-font-smoothing: antialiased; }
+
+/* ---------- top of page ---------- */
+.back { display: block; width: 55%; padding-top: 2.6rem; font-size: 1.05rem; font-variant: small-caps; letter-spacing: .06em; text-transform: lowercase; }
+.back a:link, .back a:visited { background: none; color: var(--soft); }
+.contact { margin: -1.4rem 0 2.6rem; font-size: 1.1rem; font-variant: small-caps; letter-spacing: .06em; text-transform: lowercase; color: var(--soft); }
+.contact a:link, .contact a:visited { background: none; color: var(--soft); }
+.contact .sep { margin: 0 .2rem; color: var(--faint); }
+.contact .addr { font-variant: normal; text-transform: none; letter-spacing: 0; font-family: var(--lf); }
+
+/* ---------- headings ---------- */
+h1 { font-weight: 400; font-size: 3.2rem; line-height: 1; margin: 4.4rem 0 1.5rem; }
+p.subtitle { font-style: italic; font-size: 1.8rem; line-height: 1.2; margin: -0.6rem 0 2.2rem; width: 55%; color: #222; }
+h2 { font-style: italic; font-weight: 400; font-size: 2.2rem; line-height: 1; margin: 3.6rem 0 1.4rem; }
+h3 { font-style: italic; font-weight: 400; font-size: 1.7rem; line-height: 1.1; margin: 2.2rem 0 1rem; }
+
+/* ---------- text ---------- */
+article { padding: 0 0 3rem; position: relative; }
+section { padding: .5rem 0; }
+p, ol, ul, dl, .eq, blockquote { font-size: 1.4rem; line-height: 2rem; }
+p { margin: 1.4rem 0; vertical-align: baseline; }
+section > p, section > ol, section > ul, section > dl, section > .eq, section > figure:not(.fullwidth), section > blockquote, section > table, section > .item, section > .role, section > .tailor { width: 55%; }
+ol, ul { padding-left: 1.6rem; }
+li { padding: .35rem 0; }
+.newthought { font-variant: small-caps; font-size: 1.2em; letter-spacing: .02em; }
+.lf, .num { font-family: var(--lf); }
+code { font-family: var(--mono); font-size: 1rem; }
+b, strong { font-weight: 700; }
+em, i { font-style: italic; }
+
+a:link, a:visited { color: inherit; text-decoration: none; background: linear-gradient(var(--ink), var(--ink)) 0 calc(100% - .06em) / 100% 1px no-repeat; text-shadow: .03em 0 var(--bg), -.03em 0 var(--bg), 0 .03em var(--bg), 0 -.03em var(--bg); }
+
+/* ---------- work and project items ---------- */
+h3.role { margin: 2.6rem 0 1.2rem; }
+.when { font-family: var(--lf); font-style: normal; font-variant: normal; letter-spacing: 0; color: var(--soft); font-size: 1.1rem; margin-left: .7rem; }
+.item { position: relative; margin: 0 0 1.7rem; }
+.item p { margin: 0; }
+.item .ititle { font-variant: small-caps; font-size: 1.45rem; letter-spacing: .03em; line-height: 1.9rem; margin-bottom: .15rem; }
+.item .detail { color: var(--soft); }
+p.tools { margin-top: -.6rem; font-family: var(--lf); font-size: 1.15rem; line-height: 1.6rem; color: var(--soft); }
+p.links a { margin-right: 1rem; }
+.item p.tools { margin-top: .35rem; font-family: var(--lf); font-size: 1.15rem; line-height: 1.6rem; color: var(--soft); }
+dl.skills { display: grid; grid-template-columns: 8.5rem 1fr; gap: .25rem 1rem; margin: 0 0 1rem; }
+dl.skills dt { font-style: italic; color: var(--soft); }
+dl.skills dd { margin: 0; }
+.stack { font-variant: small-caps; text-transform: lowercase; letter-spacing: .05em; color: var(--soft); }
+
+/* ---------- sidenotes and margin notes ---------- */
+.sidenote, .marginnote { float: right; clear: right; margin-right: -60%; width: 50%; margin-top: .3rem; margin-bottom: 0; font-size: 1.1rem; line-height: 1.35; vertical-align: baseline; position: relative; color: #333; }
+.sidenote-number { counter-increment: sidenote-counter; }
+.sidenote-number::after, .sidenote::before { font-family: var(--lf); position: relative; vertical-align: baseline; }
+.sidenote-number::after { content: counter(sidenote-counter); font-size: 1rem; top: -.5rem; left: .1rem; color: var(--red); }
+.sidenote::before { content: counter(sidenote-counter) " "; font-size: 1rem; top: -.5rem; color: var(--red); }
+input.margin-toggle { display: none; }
+label.margin-toggle:not(.sidenote-number) { display: none; }
+label.sidenote-number { display: inline-block; max-height: 2rem; }
+
+/* ---------- figures ---------- */
+figure { padding: 0; border: 0; font: inherit; vertical-align: baseline; max-width: 55%; margin: 0 0 3rem; }
+figure.fullwidth { max-width: 90%; width: 90%; }
+figcaption { float: right; clear: right; margin: 0; font-size: 1.1rem; line-height: 1.6; position: relative; max-width: 40%; }
+figure.fullwidth figcaption { float: none; max-width: none; margin: .8rem 24% 0 0; }
+figure:not(.fullwidth) figcaption { float: none; max-width: none; margin-top: .5rem; color: var(--soft); }
+.marginnote svg, .marginnote img { width: 100%; max-width: 100%; display: block; margin: 0 0 .4rem; }
+img { max-width: 100%; }
+svg.spark { height: 1.05em; width: 5.5em; vertical-align: -0.12em; overflow: visible; }
+svg.spark .hot { fill: var(--red); }
+
+/* small tables, Tufte style */
+.minitab { display: grid; font-family: var(--lf); margin-bottom: .5rem; }
+.minitab span { padding: .05rem 0; }
+.minitab .h { font-style: italic; font-family: var(--serif); color: var(--soft); }
+.minitab .rule { border-bottom: 1px solid var(--ink); }
+.minitab .top { border-top: 1px solid var(--ink); }
+.minitab .r { text-align: right; }
+.minitab .hot { color: var(--red); }
+
+table.booktabs { border-collapse: collapse; font-family: var(--lf); font-size: 1.15rem; line-height: 1.6; width: 55%; }
+.booktabs th, .booktabs td { padding: .1rem .8rem .1rem 0; text-align: left; font-weight: 400; vertical-align: top; }
+.booktabs thead th { border-bottom: 1px solid var(--ink); font-style: italic; font-family: var(--serif); }
+.booktabs tbody tr:last-child td { border-bottom: 1px solid var(--ink); }
+.booktabs .r { text-align: right; }
+.booktabs .soon td { color: var(--faint); }
+.booktabs .part td { font-style: italic; font-family: var(--serif); padding-top: .9rem; color: var(--soft); }
+
+.eq { margin: 1rem 0 1.6rem; overflow-x: auto; overflow-y: hidden; }
+.katex { font-size: 1.12em; }
+
+/* click-to-load video */
+.video { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; padding: 0; cursor: pointer; background: #000 center / cover no-repeat; }
+button.video::after { content: ''; position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: rgba(255,255,255,.92); box-shadow: 0 4px 18px rgba(0,0,0,.25); }
+button.video::before { content: ''; position: absolute; left: 50%; top: 50%; margin: -11px 0 0 -6px; border-style: solid; border-width: 11px 0 11px 18px; border-color: transparent transparent transparent var(--ink); z-index: 1; }
+button.video:hover::after { background: #fff; }
+.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video-note { font-size: 1rem; color: var(--soft); margin-top: .4rem; }
+
+/* ---------- tailoring (only when the link carries ?show / ?match) ---------- */
+.tailor { border-top: 1px solid var(--ink); border-bottom: 1px solid var(--hair); padding: .6rem 0 .9rem; margin: 0 0 2.4rem; }
+.tailor .for { font-size: 1.4rem; line-height: 2rem; margin: .4rem 0; }
+.tailor ol { margin: 0; padding-left: 1.4rem; }
+.tailor li { padding: .25rem 0; font-size: 1.25rem; line-height: 1.75rem; }
+.tailor li::marker { font-family: var(--lf); color: var(--red); }
+.tailor .t { font-style: italic; }
+.tailor .cv { font-size: 1.15rem; margin: .5rem 0 0; }
+.relevant { position: relative; }
+.relevant::before { content: 'relevant'; position: absolute; left: -7.2rem; top: .35rem; width: 6.2rem; text-align: right; font-size: .95rem; font-variant: small-caps; letter-spacing: .06em; color: var(--red); }
+mark.match { background: var(--mark); color: inherit; padding: 0 .08em; border-radius: 2px; }
+
+/* ---------- outside-work doodles ---------- */
+:root { --rust: #b4512f; --ochre: #c4933f; --slate: #46606d; }
+section > .doodles { width: 55%; }
+.doodles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.6rem 1.4rem; }
+.doodle { margin: 0; max-width: none; text-align: center; cursor: default; }
+.doodle svg { width: 100%; max-width: 104px; height: auto; display: block; margin: 0 auto; overflow: visible; }
+.doodle svg * { fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.doodle .ink { stroke: var(--ink); }
+.doodle .acc.rust { stroke: var(--rust); }
+.doodle .acc.ochre { stroke: var(--rust); }
+.doodle .acc.slate { stroke: var(--rust); }
+.doodle svg { transition: transform .3s ease; }
+.doodle:hover svg { transform: rotate(-3deg) scale(1.04); }
+.doodle figcaption { float: none; max-width: none; margin: .4rem 0 0; font-size: 1.05rem; line-height: 1.35; color: var(--soft); }
+@media (max-width: 760px) {
+  section > .doodles { width: 100%; }
+  .doodles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------- footer ---------- */
+footer.colophon { width: 55%; border-top: 1px solid var(--hair); margin: 3rem 0 4rem; padding-top: 1.2rem; font-size: 1.1rem; line-height: 1.6; color: var(--soft); }
+footer.colophon a:link, footer.colophon a:visited { margin-right: .9rem; color: var(--soft); }
+footer.colophon pre { font: .95rem/1.5 var(--mono); color: var(--ink); margin: .6rem 0 1.2rem; white-space: pre-wrap; }
+
+/* ---------- phones: margin text folds behind a tap, figures stay visible ---------- */
+@media (max-width: 760px) {
+  body { width: 84%; padding-left: 8%; padding-right: 8%; }
+  .back, p.subtitle, section > p, section > ol, section > ul, section > dl, section > .eq, section > figure:not(.fullwidth), section > blockquote, section > table, section > .item, section > .role, section > .tailor, footer.colophon { width: 100%; }
+  figure, figure.fullwidth, table.booktabs { max-width: 100%; width: 100% !important; }
+  figure.fullwidth figcaption { margin-right: 0; }
+  figcaption { max-width: 100%; float: none; }
+  h1 { font-size: 2.6rem; margin-top: 3rem; }
+  label.margin-toggle:not(.sidenote-number) { display: inline; cursor: pointer; color: var(--red); }
+  label.sidenote-number { cursor: pointer; }
+  .sidenote, .marginnote { display: none; }
+  .margin-toggle:checked + .sidenote, .margin-toggle:checked + .marginnote { display: block; float: left; left: 1rem; clear: both; width: 95%; margin: 1rem 2.5%; position: relative; }
+  .marginnote.fig { display: block; float: none; clear: both; width: 100%; margin: .8rem 0 .4rem; font-size: 1.05rem; }
+  .marginnote.fig svg, .marginnote.fig img { max-width: 420px; }
+  label.margin-toggle.fig-toggle { display: none !important; }
+  dl.skills { grid-template-columns: 1fr; gap: 0; }
+  dl.skills dd { margin-bottom: .5rem; }
+  .relevant::before { position: static; display: block; width: auto; text-align: left; margin-bottom: .1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media print {
+  body { padding-left: 0; width: 100%; }
+  .back, .video { display: none; }
+}
+
+#outside { clear: both; }
+
+/* ---------- accent: the rust red from the film, for note numbers ---------- */
+.sidenote-number::after, .sidenote::before { color: var(--rust); }
+
+/* ---------- a hand-drawn highlighter stroke on each item's headline result ---------- */
+mark.hl {
+  color: inherit; padding: .02em .28em; margin: 0 -.12em; border-radius: .6em .25em .7em .3em;
+  background:
+    linear-gradient(104deg, rgba(232,190,95,0) .9%, rgba(232,190,95,.55) 2.4%, rgba(232,190,95,.32) 5.8%, rgba(232,190,95,.18) 93%, rgba(232,190,95,.6) 96%, rgba(232,190,95,0) 98%),
+    linear-gradient(183deg, rgba(232,190,95,0) 0%, rgba(232,190,95,.3) 7.9%, rgba(232,190,95,0) 15%);
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+/* in a tailored link, only the job's keywords are marked */
+.has-match mark.hl { background: none; padding: 0; margin: 0; }

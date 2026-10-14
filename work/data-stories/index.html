@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Stories · Hussain Abuwala</title>
+<meta name="description" content="A prototype agent that explores a dataset on its own and returns a few verifiable findings, instead of suggesting questions.">
+<link rel="canonical" href="https://hussainabuwala.github.io/work/data-stories/">
+<link rel="stylesheet" href="/assets/tufte.css?v=5006481b">
+<style>
+  table.booktabs.wide { width: 90%; font-size: 1.1rem; line-height: 1.5; }
+  table.booktabs.wide td { padding-bottom: .45rem; }
+  ul li, ol li { padding: .3rem 0; }
+  .flow { font-family: var(--lf); font-size: 1.25rem; color: var(--soft); margin: 1rem 0 1.4rem; }
+  @media (min-width: 761px) { table.booktabs.wide td:first-child { white-space: nowrap; } }
+</style>
+</head>
+<body>
+<article>
+  <div class="back"><a href="/">← Hussain Abuwala</a></div>
+  <h1>Data Stories</h1>
+  <p class="subtitle">A prototype agent that finds what is worth knowing in a dataset. IBM, 2026.</p>
+
+  <section>
+    <p><span class="newthought">Suggested questions tell people</span> what they could ask about a dataset. They still have to pick a question, read the answer, think of a follow-up, and repeat until something interesting turns up. I built a prototype to show what could come next: an agent that explores the dataset on its own and returns two or three findings worth acting on, each with the evidence behind it. It was selected for executive review. It is a prototype, not a product feature.</p>
+    <p class="tools">TypeScript · Node.js · LLMs · Agents · SQL · Python · pandas</p>
+  </section>
+
+  <section>
+    <h2>Why it matters</h2>
+    <p>Suggested questions answer “what could I ask?”. Most people want the answer to a different question: “what should I know?”. Something surprising in the data, such as one region driving most of a loss, rarely shows up on a default dashboard, and finding it takes many rounds of questions.</p>
+    <p>A finding here is more than one number. It has:</p>
+    <ul>
+      <li>a headline with a specific number that makes a reader stop;</li>
+      <li>a short explanation that connects two or more facts;</li>
+      <li>a reason it matters: a decision to make, something to investigate, or a risk.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The problem</h2>
+    <ul>
+      <li><b>No question to start from.</b> The agent has to decide what to look at, and when it has found enough.</li>
+      <li><b>LLMs are unreliable at arithmetic.</b> Percentages, shares and ratios across many rows are exactly where a model makes mistakes, and a wrong number in a headline is worse than no finding.</li>
+      <li><b>Data does not fit in a prompt.</b> Query results can be far larger than what a model can read at once.</li>
+      <li><b>Findings must be checkable.</b> A surprising claim from an AI is only useful if a person can see how it was reached.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The solution</h2>
+
+    <h3>An agent with a few tools</h3>
+    <p>The agent works in a loop: it picks a tool, looks at the result, and decides what to do next. It has four tools: run a SQL query, analyse a result with Python, propose a finding, and finish. Before it starts, it gets a profile of the dataset: its columns, what they mean, and sample values.</p>
+    <p class="flow">look at the profile → query → analyse → propose a finding → repeat or finish</p>
+
+    <p>The tools went through three versions, each moving the arithmetic further away from the model:</p>
+    <table class="booktabs wide">
+      <thead><tr><th>Version</th><th>How it worked</th><th>What went wrong, or right</th></tr></thead>
+      <tbody>
+        <tr><td>1. The model does the maths</td><td>Query results go straight to the model, which works out the numbers itself</td><td>Results had to fit in the prompt, and multi-step calculations were often wrong</td></tr>
+        <tr><td>2. Fixed statistics tools</td><td>The model chooses from a small set of calculations, such as a trend or an anomaly check, which code runs exactly</td><td>Numbers were right, but the model could only ask what the tools allowed</td></tr>
+        <tr><td>3. Python</td><td>The model writes short Python analyses, which run on the full result; it only reads the printed output</td><td>Exact numbers, and any analysis the model can express</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Every finding comes with its trail</h3>
+    <p>Every step is recorded: the purpose of each query, the SQL, a preview of its result, the Python code and its output. A finding must cite the analyses its numbers come from, and the trail is shown with it. A reader can follow exactly how each number was produced.</p>
+
+    <h3>Findings must be different from each other</h3>
+    <p>Before a finding is accepted, the agent has to explain how it differs from the ones already found, so the result is not three versions of the same insight.</p>
+
+    <h3>Knowing when to stop</h3>
+    <ul>
+      <li>Each run has a budget of model calls, queries and time, in a few sizes from quick to deep.</li>
+      <li>The run ends when the agent finishes, the budget runs out, or the agent stops making progress.</li>
+      <li>Tools never crash the run. A failed query comes back as a clear error the agent can read and recover from, or a nudge to wrap up when the budget is nearly spent.</li>
+    </ul>
+
+    <h3>Running code the model writes</h3>
+    <p>In the prototype, Python runs in a separate process with a time limit. Running code written by a model is a security risk, so a production version would need a proper sandbox, with no network access and strict limits on memory.</p>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+    <p>On test datasets from different domains, a standard run took about three minutes and returned a few findings, each traceable from its headline back to the queries and analyses behind it. The prototype was selected for executive review.</p>
+  </section>
+
+  <footer class="colophon"><a href="/">Hussain Abuwala</a></footer>
+</article>
+<script src="/assets/synonyms.js?v=2e1f3543"></script>
+<script src="/assets/site.js?v=6a29193d"></script>
+</body>
+</html>

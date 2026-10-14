@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM from scratch · Hussain Abuwala</title>
+<meta name="description" content="A language model built step by step, from counting to a small Transformer, with notebooks, tests and videos.">
+<link rel="canonical" href="https://hussainabuwala.github.io/projects/llm-from-scratch/">
+<link rel="stylesheet" href="/assets/tufte.css?v=5006481b">
+<style>
+  .tryname { display: flex; gap: 1rem; align-items: baseline; flex-wrap: wrap; font-size: 1.25rem; margin: .4rem 0 .2rem; }
+  .tryname input { font: 1.3rem var(--lf); width: 9rem; padding: .15rem .4rem; border: 0; border-bottom: 1px solid var(--ink); background: transparent; outline: none; }
+  .tryname input:focus { border-color: var(--red); }
+  .chain { font-family: var(--lf); font-size: 1.15rem; color: var(--soft); }
+  .chain .zero { color: var(--red); }
+  .result { font-family: var(--lf); font-size: 1.25rem; }
+  .result .warn { color: var(--red); }
+  .links { font-size: 1.2rem; }
+</style>
+</head>
+<body>
+<article>
+  <div class="back"><a href="/">← Hussain Abuwala</a></div>
+  <h1>LLM from scratch</h1>
+  <p class="subtitle">A language model built step by step, from counting to a small Transformer. 3 of 14 episodes published.</p>
+
+  <section>
+    <p><span class="newthought">Each episode has</span> a theory video worked by hand, a build video, a notebook, and tests that fail if the concept is implemented wrongly. The number worked by hand in the theory video and the number printed by the code must match. The series ends with a small decoder-only Transformer, trained on a laptop.</p>
+    <p class="tools">Python · NumPy · Jupyter · Matplotlib · unittest</p>
+    <p class="links"><a href="https://github.com/HussainAbuwala/llm-from-scratch">Code</a><a href="https://www.youtube.com/@theunplannedstack">Videos</a></p>
+
+    <table class="booktabs">
+      <thead><tr><th>#</th><th>Episode</th><th>Code</th></tr></thead>
+      <tbody>
+        <tr class="part"><td></td><td>Part 1 · Count</td><td></td></tr>
+        <tr><td class="num">1</td><td><a href="#ep1">The smallest language model</a></td><td>Python</td></tr>
+        <tr><td class="num">2</td><td><a href="#ep2">Trigrams and the sparsity wall</a></td><td>Python</td></tr>
+        <tr><td></td><td><a href="#bridge">Bridge: counting to learning</a></td><td>—</td></tr>
+        <tr class="part"><td></td><td>Part 2 · Learn</td><td></td></tr>
+        <tr><td class="num">3</td><td><a href="#ep3">From counts to weights</a></td><td>NumPy</td></tr>
+        <tr class="soon"><td class="num">4</td><td>Gradients, by hand</td><td>NumPy</td></tr>
+        <tr class="soon"><td class="num">5</td><td>Autograd from scratch</td><td>Python</td></tr>
+        <tr class="soon"><td class="num">6</td><td>Enter PyTorch</td><td>PyTorch</td></tr>
+        <tr class="soon"><td class="num">7</td><td>Embeddings and the MLP model</td><td>PyTorch</td></tr>
+        <tr class="soon"><td class="num">8</td><td>Making training work</td><td>PyTorch</td></tr>
+        <tr class="part"><td></td><td>Part 3 · Attend</td><td></td></tr>
+        <tr class="soon"><td class="num">9</td><td>Why fixed context breaks</td><td>PyTorch</td></tr>
+        <tr class="soon"><td class="num">10</td><td>Self-attention from scratch</td><td>PyTorch</td></tr>
+        <tr class="soon"><td class="num">11</td><td>Multi-head attention and the block</td><td>PyTorch</td></tr>
+        <tr class="soon"><td class="num">12</td><td>Build the GPT</td><td>PyTorch</td></tr>
+        <tr class="soon"><td class="num">13</td><td>Tokenization for real</td><td>PyTorch</td></tr>
+        <tr class="soon"><td class="num">14</td><td>Train it and make it talk</td><td>PyTorch</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="ep1">
+    <h2>1. The smallest language model</h2>
+    <p>A character bigram model predicts the next character from the current one, using counts of which character follows which. The episode builds the same model twice: once by hand on two names, then in code on a real dataset.</p>
+
+    <p><label for="mn-bigram" class="margin-toggle fig-toggle">&#8853;</label><input type="checkbox" id="mn-bigram" class="margin-toggle"/><span class="marginnote fig"><span class="minitab" style="grid-template-columns:repeat(5,auto);justify-content:start;column-gap:.9rem"><span class="h"></span><span class="h r">a</span><span class="h r">n</span><span class="h r">v</span><span class="h r">end</span><span class="h">start</span><span class="r hot">1</span><span class="r">0</span><span class="r">0</span><span class="r">0</span><span class="h">a</span><span class="r">0</span><span class="r hot">¼</span><span class="r">¼</span><span class="r hot">½</span><span class="h">n</span><span class="r hot">½</span><span class="r">½</span><span class="r">0</span><span class="r">0</span><span class="h">v</span><span class="r">1</span><span class="r">0</span><span class="r">0</span><span class="r">0</span></span>Next-character probabilities from <i>anna</i> and <i>ava</i>. The path for <i>ana</i> is in red.</span><b>By hand, on two names.</b> Trained on <i>anna</i> and <i>ava</i>, small enough to count on paper, the model gives the unseen name <i>ana</i> probability 1 · ¼ · ½ · ½ = 1/16, a loss of ln 2 ≈ 0.693 nats per prediction. Try it with this two-name model:</p>
+    <figure>
+      <div class="tryname"><label for="nm"><i>Try a name</i></label><input id="nm" value="ana" maxlength="12" autocomplete="off" spellcheck="false"><span class="chain" id="chain"></span></div>
+      <div class="result" id="res"></div>
+    </figure>
+
+    <p><label for="mn-heat" class="margin-toggle fig-toggle">&#8853;</label><input type="checkbox" id="mn-heat" class="margin-toggle"/><span class="marginnote fig"><img src="img/transition-counts.png" alt="Heatmap of how often each character follows each other character in the training names">How often each character follows each other one in the training names (darker is more). This table is the whole model.</span><b>In code, on real names.</b> The same model in Python, trained on 32,033 US first names (Social Security data for 2018, from Andrej Karpathy’s <a href="https://github.com/karpathy/makemore">makemore</a>). Removing repeated spellings leaves 29,494 names, split 80/10/10 into training, validation and test. Loss on the 21,053 test predictions, in nats per prediction:</p>
+    <table class="booktabs">
+      <thead><tr><th>Model</th><th class="r">Test loss</th></tr></thead>
+      <tbody>
+        <tr><td>Uniform: every next character equally likely</td><td class="r">3.296</td></tr>
+        <tr><td>Unigram: letter frequencies, ignoring context</td><td class="r">2.819</td></tr>
+        <tr><td>Bigram, add-k smoothing (k = 0.3)</td><td class="r">2.460</td></tr>
+      </tbody>
+    </table>
+    <p>Smoothing adds a small count k to every pair, so a pair never seen in training no longer gets probability zero. k was chosen on the validation names.</p>
+    <p class="links"><a href="https://www.youtube.com/watch?v=YV30EDncrY4">Theory video, 50 min</a><a href="https://www.youtube.com/watch?v=2R5A23eDM0o">Build video, 33 min</a><a href="https://github.com/HussainAbuwala/llm-from-scratch/tree/main/episodes/01_names">Code</a></p>
+  </section>
+
+  <section id="ep2">
+    <h2>2. Trigrams and the sparsity wall</h2>
+    <p>The same 29,494 US first names and the same training, validation and test split as episode 1, but the model now looks at more than one previous character: 2 (a trigram), then 3, 4 and 5. Training loss keeps falling as the context grows. Loss on held-out names is lowest at three characters and rises after that.<label for="sn-1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-1" class="margin-toggle"/><span class="sidenote">Smoothing k was chosen on the validation names; the frozen settings were then scored once on test. The result holds for this dataset and add-k smoothing, not for every n-gram method.</span></p>
+    <figure>
+      <img src="img/context-loss.png" alt="Loss by context length: training loss falls from 2.45 to under 1.8, validation loss is lowest at 3 characters and rises to 2.39 at 5">
+      <figcaption>Loss by number of context characters. Training keeps improving; held-out prediction gets worse after 3.</figcaption>
+    </figure>
+    <p>The reason is thin evidence. With longer contexts, more of the contexts seen in training appear only once, and more held-out predictions need a context that never appeared in training at all.</p>
+    <figure class="fullwidth">
+      <img src="img/sparse-evidence.png" alt="Left: share of training contexts seen only once rises from 0% at 1 character to 59.1% at 5. Right: share of validation predictions with an unseen context rises from 0% to 13.0%">
+      <figcaption>Left: training contexts seen only once. Right: held-out predictions whose context never appeared in training.</figcaption>
+    </figure>
+    <p>Test loss for every context length, with the number of the 21,053 test predictions whose context was never seen in training:</p>
+    <table class="booktabs">
+      <thead><tr><th>Context</th><th>Model</th><th class="r">k</th><th class="r">Test loss</th><th class="r">Unseen-context predictions</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>Bigram</td><td class="r">0.3</td><td class="r">2.460</td><td class="r">0</td></tr>
+        <tr><td class="num">2</td><td>Trigram</td><td class="r">0.3</td><td class="r">2.239</td><td class="r">6</td></tr>
+        <tr><td class="num">3</td><td>4-gram</td><td class="r">0.1</td><td class="r"><b>2.130</b></td><td class="r">148</td></tr>
+        <tr><td class="num">4</td><td>5-gram</td><td class="r">0.1</td><td class="r">2.196</td><td class="r">1,114</td></tr>
+        <tr><td class="num">5</td><td>6-gram</td><td class="r">0.1</td><td class="r">2.387</td><td class="r">2,676</td></tr>
+      </tbody>
+    </table>
+    <p class="links"><a href="https://www.youtube.com/watch?v=c9fX8s3hL_w">Theory video, 44 min</a><a href="https://www.youtube.com/watch?v=-IQmLDQ3d0M">Build video, 31 min</a><a href="https://github.com/HussainAbuwala/llm-from-scratch/tree/main/episodes/02_trigrams">Code</a></p>
+  </section>
+
+  <section id="bridge">
+    <h3>Bridge: counting to learning</h3>
+    <p>What count models can and cannot do, including backoff and interpolation, and the three pieces the next part adds: adjustable weights, training, and a structure that reuses weights. <a href="https://www.youtube.com/watch?v=xG4Sy_H_DuU">Video, 15 min</a>.</p>
+  </section>
+
+  <section id="ep3">
+    <h2>3. From counts to weights</h2>
+    <p>The same bigram task with a table of adjustable scores instead of counts: look up the score row for the current character, turn it into probabilities with softmax, and score the target with negative log-likelihood. Written in NumPy.</p>
+    <p><b>One score, changed by hand.</b> To see what a single weight does, the episode changes one score manually on the <i>anna</i> and <i>ava</i> example. This is not training; it only shows how one score moves the probabilities and the loss. With every score at zero, each of the four next characters has probability ¼, and the loss over the nine training targets is ln 4 ≈ 1.386. Setting one score, W[a, end], to ln 2 lowers the loss to 1.331. Setting it to ln 100 overshoots and raises it to 1.807. Finding good values automatically is what training does, starting with gradients in episode 4.</p>
+    <p class="links"><a href="https://www.youtube.com/watch?v=TgtndTlmKxQ">Theory video, 28 min</a><a href="https://www.youtube.com/watch?v=kUS5b3OvVvM">Build video, 25 min</a><a href="https://github.com/HussainAbuwala/llm-from-scratch/tree/main/episodes/03_weights">Code</a></p>
+  </section>
+
+  <footer class="colophon">
+    <a href="https://github.com/HussainAbuwala/llm-from-scratch">Code</a><a href="https://github.com/HussainAbuwala/llm-from-scratch/issues">Report an error</a>
+  </footer>
+</article>
+
+<script>
+/* Score any name with the bigram model trained on anna and ava. */
+const P = { '^': { a: [1, 1] }, a: { n: [1, 4], v: [1, 4], '$': [1, 2] }, n: { n: [1, 2], a: [1, 2] }, v: { a: [1, 1] } };
+const label = c => c === '^' ? 'start' : c === '$' ? 'end' : c;
+function score() {
+  const w = document.getElementById('nm').value.toLowerCase().replace(/[^a-z]/g, '');
+  const res = document.getElementById('res'), chain = document.getElementById('chain');
+  if (!w) { res.textContent = ''; chain.textContent = ''; return; }
+  const toks = ['^', ...w, '$'];
+  let num = 1, den = 1, zero = false, parts = [];
+  for (let i = 0; i < toks.length - 1; i++) {
+    const p = (P[toks[i]] || {})[toks[i + 1]];
+    if (!p) zero = true; else { num *= p[0]; den *= p[1]; }
+    parts.push(`<span class="${p ? '' : 'zero'}">${p ? (p[1] === 1 ? '1' : p[0] + '/' + p[1]) : '0'}</span>`);
+  }
+  chain.innerHTML = parts.join(' · ');
+  const n = toks.length - 1;
+  res.innerHTML = zero
+    ? `P(${w}) = 0, loss = <span class="warn">∞</span>. It contains a pair the model never saw. Smoothing fixes this.`
+    : `P(${w}) = 1/${den / num}, loss = ln(${den / num}) / ${n} = ${(Math.log(den / num) / n).toFixed(3)} nats per prediction`;
+}
+document.getElementById('nm').addEventListener('input', score);
+score();
+</script>
+<script src="/assets/synonyms.js?v=2e1f3543"></script>
+<script src="/assets/site.js?v=6a29193d"></script>
+</body>
+</html>

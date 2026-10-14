@@ -1,0 +1,444 @@
+{
+  "person": {
+    "name": "Hussain Abuwala",
+    "title": "Software Developer",
+    "location": "Toronto, Canada",
+    "experience": "3+ years",
+    "email": "hussainabuwala.1997@gmail.com",
+    "site": "https://hussainabuwala.github.io",
+    "links": {
+      "github": "https://github.com/HussainAbuwala",
+      "youtube": "https://www.youtube.com/@theunplannedstack",
+      "linkedin": "https://www.linkedin.com/in/hussain-abuwala"
+    },
+    "intro": "I work on LLM-powered analytics in IBM watsonx BI. I’m curious about software in general, and I share what I build and learn on <a href=\"https://www.youtube.com/@theunplannedstack\">The Unplanned Stack</a>.",
+    "resume_summary": "Software developer with 3+ years of experience building AI-powered analytics products, backend services, and cloud-native applications at IBM. Progressed from Band 6 to Band 7 and delivered LLM-based systems that cut processing costs by 99.8%, improved performance 6.5x, and generated $19K in monthly customer savings."
+  },
+  "headlines": {
+    "ai-backend": "Software Developer · AI/LLM · Backend",
+    "backend-cloud": "Software Developer · Backend · Cloud-native",
+    "fullstack-ai": "Software Developer · Full-stack · AI"
+  },
+  "work": [
+    {
+      "company": "IBM",
+      "location": "Toronto, Canada",
+      "roles": [
+        {
+          "title": "Software Developer, Band 7",
+          "start": "2025-10",
+          "end": null
+        },
+        {
+          "title": "Software Developer, Band 6",
+          "start": "2024-01",
+          "end": "2025-09"
+        }
+      ],
+      "items": [
+        {
+          "id": "llm-pipeline",
+          "role": 0,
+          "title": "Metadata enrichment v2",
+          "summary": "Cut cost per asset from $5.32 to $0.009 by rebuilding watsonx BI metadata enrichment as a native LLM pipeline that replaced external dependencies. 6.5× faster, accuracy above 90%, and $19K in monthly customer savings.",
+          "resume": "Rebuilt IBM watsonx BI metadata enrichment (v2) as a native LLM pipeline, cutting per-asset cost 99.8% ($5.32 to $0.009), delivering $19K in monthly customer savings, maintaining 90%+ accuracy, and improving performance 6.5x.",
+          "stack": [
+            "Java",
+            "Node.js",
+            "TypeScript",
+            "LLMs",
+            "Embeddings",
+            "RabbitMQ",
+            "Kubernetes"
+          ],
+          "priority": 10,
+          "tags": [
+            "Prompt engineering",
+            "Backend"
+          ],
+          "page": "/work/metadata-enrichment/",
+          "key": "$5.32 to $0.009"
+        },
+        {
+          "id": "data-stories",
+          "role": 0,
+          "title": "Data Stories",
+          "summary": "An analytics agent that finds two or three verifiable findings in a dataset without the user asking a question. Selected for executive review.",
+          "resume": "Developed Data Stories, an autonomous analytics agent that surfaced 2-3 decision-grade, verifiable findings from a dataset without requiring users to formulate questions; selected for executive review.",
+          "stack": [
+            "Node.js",
+            "TypeScript",
+            "LLMs"
+          ],
+          "priority": 8,
+          "tags": [
+            "Agents",
+            "Prompt engineering",
+            "Backend"
+          ],
+          "page": "/work/data-stories/",
+          "key": "Selected for executive review"
+        },
+        {
+          "id": "custom-instructions",
+          "role": 0,
+          "title": "Custom Instructions",
+          "summary": "Lets business users write domain rules in plain language. The rules feed asset discovery and SQL generation, so answers follow each customer’s business context.",
+          "resume": "Implemented Custom Instructions, enabling business users to encode domain rules and knowledge in natural language; integrated the instructions into asset discovery and SQL generation to produce answers grounded in each customer's business context.",
+          "stack": [
+            "Node.js",
+            "TypeScript",
+            "LLMs",
+            "Kubernetes"
+          ],
+          "priority": 7,
+          "tags": [
+            "Prompt engineering",
+            "SQL generation",
+            "Backend"
+          ]
+        },
+        {
+          "id": "viz-editor",
+          "role": 0,
+          "title": "Visualization editor",
+          "summary": "A chart editor for IBM watsonx.data with manual authoring and automatic chart recommendations, using metadata enrichment, aggregation selection, semantic sorting and type inference.",
+          "resume": "Built a visualization editor for IBM watsonx.data with manual authoring and automatic chart recommendations based on metadata enrichment, aggregation selection, semantic sorting, and numerical, categorical, and identifier type inference.",
+          "stack": [
+            "React",
+            "Node.js",
+            "LLMs"
+          ],
+          "priority": 6,
+          "tags": [
+            "Frontend",
+            "Prompt engineering",
+            "Backend"
+          ]
+        },
+        {
+          "id": "number-formatting",
+          "role": 0,
+          "title": "Number formatting",
+          "summary": "Currency, percentage and number formatting across text answers and charts, which unblocked a prospective customer.",
+          "resume": "Delivered currency, percentage, and number formatting across textual answers and visualizations, removing a critical adoption blocker for a prospective customer.",
+          "stack": [
+            "Node.js",
+            "TypeScript",
+            "LLMs",
+            "Kubernetes"
+          ],
+          "priority": 3,
+          "tags": [
+            "Prompt engineering",
+            "Backend"
+          ]
+        },
+        {
+          "id": "enrichment-service",
+          "role": 1,
+          "title": "Metadata enrichment v1",
+          "summary": "Cut glossary uploads from about 20 minutes to under 3 by modernizing the legacy enrichment service and integrating watsonx.data intelligence classification. It powers five services: conversational analytics, visualization, insights, semantic search and Suggested Questions.",
+          "resume": "Modernized a legacy metadata enrichment service (v1) and integrated watsonx.data intelligence classification, reducing glossary-artifact upload time from approximately 20 minutes to under 3 minutes; powered five core services spanning conversational analytics, visualization, insights, semantic search, and Suggested Questions.",
+          "stack": [
+            "Java",
+            "Node.js",
+            "TypeScript",
+            "Embeddings",
+            "RabbitMQ",
+            "Docker",
+            "Kubernetes"
+          ],
+          "priority": 9,
+          "tags": [
+            "Backend"
+          ],
+          "page": "/work/metadata-enrichment/",
+          "key": "from about 20 minutes to under 3"
+        },
+        {
+          "id": "suggested-questions",
+          "role": 1,
+          "title": "Suggested Questions",
+          "summary": "An LLM service that generates and pre-validates answerable questions from enriched schemas, giving users a guided first interaction. Won an IBM Outstanding Innovation Award.",
+          "resume": "Built an LLM-powered Suggested Questions service that used enriched schemas to generate and pre-validate answerable analytical questions, creating a guided first interaction for users; recognized with an IBM Outstanding Innovation Award.",
+          "stack": [
+            "Node.js",
+            "TypeScript",
+            "LLMs",
+            "Embeddings",
+            "RabbitMQ",
+            "Docker",
+            "Kubernetes"
+          ],
+          "priority": 8,
+          "tags": [
+            "Prompt engineering",
+            "Backend"
+          ],
+          "page": "/work/suggested-questions/",
+          "key": "IBM Outstanding Innovation Award"
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "url-shortener",
+      "title": "URL Shortener",
+      "page": "/projects/url-shortener/",
+      "date": "2026-10",
+      "summary": "Load-tested through nine scripted events up to 10% of Bitly’s traffic, changing the design only when an event broke it. Final version: about 877M redirects a month at 14.8 ms p99 with 0% errors, for €9.56 a month.",
+      "resume": "Built a URL shortener on a single server and load-tested it with k6 through nine scripted events up to 10% of Bitly's traffic (1,000 redirects/s); final design serves an estimated 877M redirects/month at 14.8 ms p99 with 0% errors for EUR 9.56/month, and recovers from machine loss in under 6 minutes.",
+      "stack": [
+        "TypeScript",
+        "Node.js",
+        "SQLite",
+        "nginx",
+        "Litestream",
+        "Linux",
+        "Bash",
+        "k6",
+        "Python"
+      ],
+      "priority": 9,
+      "tags": [
+        "Load testing"
+      ],
+      "key": "877M redirects a month"
+    },
+    {
+      "id": "llm-from-scratch",
+      "title": "LLM from scratch",
+      "page": "/projects/llm-from-scratch/",
+      "date": "2026-10",
+      "summary": "A language model built step by step, from a table of counts to a small Transformer. Each episode has a notebook, tests, and two videos. 3 of 14 episodes published.",
+      "resume": "Building a character-level language model from scratch in a 14-episode video series (Python, NumPy, later PyTorch), from count-based n-grams to a decoder-only Transformer; each episode ships tested code and notebooks.",
+      "stack": [
+        "Python",
+        "NumPy",
+        "Jupyter",
+        "Matplotlib",
+        "unittest"
+      ],
+      "priority": 8,
+      "tags": [
+        "Language models"
+      ],
+      "key": "3 of 14 episodes published"
+    }
+  ],
+  "thoughts": [
+    {
+      "id": "everything-has-a-price",
+      "title": "Everything Has a Price",
+      "page": "/thoughts/everything-has-a-price/",
+      "date": "2026-09",
+      "summary": "An animated essay about desire and what it costs. 2 min 44 s."
+    }
+  ],
+  "education": [
+    {
+      "school": "University of Waterloo",
+      "location": "Waterloo, Canada",
+      "degree": "Master of Mathematics (MMath) in Computer Science",
+      "start": "2022-01",
+      "end": "2023-04",
+      "detail": "CGPA 94/100"
+    },
+    {
+      "school": "Monash University",
+      "location": "Sunway, Malaysia",
+      "degree": "Bachelor of Computer Science (Honours)",
+      "start": "2016-02",
+      "end": "2020-06",
+      "detail": "CGPA 4.0/4.0; Overall Best Graduate (100+ cohort); High Achiever Award (top 1%)",
+      "key": "Overall Best Graduate (100+ cohort)"
+    }
+  ],
+  "skills": {
+    "Languages": [
+      "TypeScript",
+      "Java",
+      "Python",
+      "Bash"
+    ],
+    "AI": [
+      "LLMs",
+      "Prompt engineering",
+      "Agents",
+      "Embeddings"
+    ],
+    "Backend": [
+      "Node.js",
+      "RabbitMQ",
+      "SQLite",
+      "nginx"
+    ],
+    "Frontend": [
+      "React"
+    ],
+    "Infrastructure": [
+      "Docker",
+      "Kubernetes",
+      "Linux",
+      "Git",
+      "k6"
+    ]
+  },
+  "synonyms": {
+    "LLMs": [
+      "llm",
+      "large language model",
+      "large language models",
+      "genai",
+      "gen ai",
+      "generative ai",
+      "gpt"
+    ],
+    "Node.js": [
+      "node",
+      "nodejs",
+      "node js"
+    ],
+    "TypeScript": [
+      "ts",
+      "typescript"
+    ],
+    "JavaScript": [
+      "js",
+      "javascript",
+      "ecmascript"
+    ],
+    "Kubernetes": [
+      "k8s",
+      "kubernetes"
+    ],
+    "RabbitMQ": [
+      "rabbit",
+      "rabbitmq",
+      "message queue",
+      "message queues",
+      "amqp",
+      "message broker"
+    ],
+    "Embeddings": [
+      "embedding",
+      "vector",
+      "vectors",
+      "semantic search",
+      "vector search"
+    ],
+    "Prompt engineering": [
+      "prompting",
+      "prompt design"
+    ],
+    "Agents": [
+      "agent",
+      "agentic",
+      "ai agents",
+      "agentic workflows"
+    ],
+    "React": [
+      "reactjs",
+      "react.js"
+    ],
+    "Frontend": [
+      "front-end",
+      "front end",
+      "ui"
+    ],
+    "Backend": [
+      "back-end",
+      "back end",
+      "server-side",
+      "apis",
+      "api"
+    ],
+    "SQL generation": [
+      "text-to-sql",
+      "nl2sql",
+      "natural language to sql"
+    ],
+    "SQLite": [
+      "sqlite",
+      "sql",
+      "relational database",
+      "rdbms"
+    ],
+    "Docker": [
+      "containers",
+      "containerization"
+    ],
+    "Load testing": [
+      "performance testing",
+      "load test",
+      "k6"
+    ],
+    "Python": [
+      "py"
+    ],
+    "Language models": [
+      "nlp",
+      "language modeling",
+      "transformers",
+      "transformer"
+    ]
+  },
+  "log": [
+    {
+      "date": "2026-10",
+      "text": "Published the URL shortener: nine load events, every number measured.",
+      "link": "/projects/url-shortener/"
+    },
+    {
+      "date": "2026-10",
+      "text": "LLM from scratch, episode 3: from counts to weights, softmax and loss in NumPy.",
+      "link": "/projects/llm-from-scratch/#ep3"
+    },
+    {
+      "date": "2026-09",
+      "text": "Published <i>Everything Has a Price</i>.",
+      "link": "/thoughts/everything-has-a-price/"
+    },
+    {
+      "date": "2026-09",
+      "text": "LLM from scratch, episode 2: trigrams and the sparsity wall.",
+      "link": "/projects/llm-from-scratch/#ep2"
+    }
+  ],
+  "outside": [
+    {
+      "id": "cricket",
+      "caption": "Cricket"
+    },
+    {
+      "id": "basketball",
+      "caption": "Basketball"
+    },
+    {
+      "id": "badminton",
+      "caption": "Badminton"
+    },
+    {
+      "id": "books",
+      "caption": "Non-fiction books"
+    },
+    {
+      "id": "news",
+      "caption": "News, documentaries, economics"
+    },
+    {
+      "id": "tshirt",
+      "caption": "Plain clothes, no logos"
+    },
+    {
+      "id": "computer",
+      "caption": "Computers and technology"
+    },
+    {
+      "id": "cartoons",
+      "caption": "Grew up on Pokémon, Beyblade and Jimmy Neutron"
+    }
+  ]
+}

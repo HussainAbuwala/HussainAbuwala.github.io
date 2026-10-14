@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>URL Shortener · Hussain Abuwala</title>
+<meta name="description" content="A URL shortener system design, built and load-tested event by event up to 10% of Bitly’s traffic: about 877M redirects a month at 14.8 ms p99 for €9.56 a month.">
+<link rel="canonical" href="https://hussainabuwala.github.io/projects/url-shortener/">
+<link rel="stylesheet" href="/assets/tufte.css?v=5006481b">
+<style>
+  /* the diagram of each version sits beside its event */
+  .vfig { position: absolute; left: 108%; top: .2rem; width: 56%; }
+  .vfig svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .vfig svg text { font-family: var(--lf); font-size: 13px; fill: var(--ink); }
+  .vfig svg text.s { font-size: 10.5px; fill: var(--soft); }
+  .vfig svg .b { fill: #fff; stroke: var(--ink); stroke-width: .8; }
+  .vfig svg .b.new { stroke: var(--red); stroke-width: 1.5; }
+  .vfig svg text.new { fill: var(--red); }
+  .vfig svg .fr { fill: none; stroke: #c8c8c4; stroke-width: .8; stroke-dasharray: 3 3; }
+  .vfig svg .fr.new { stroke: var(--red); stroke-width: 1.2; }
+  .vfig svg .w { stroke: var(--ink); stroke-width: .7; fill: none; }
+  .vfig svg .d { stroke-dasharray: 2 2; }
+  .vfig .vcap { font-size: 1.05rem; line-height: 1.35; margin: .2rem 0 1rem; color: var(--soft); }
+  .vfig .vcap i { color: var(--ink); }
+  .event dd.note { font-size: 1.12rem; line-height: 1.6rem; color: var(--soft); }
+  /* one event, its outcome, and the next version */
+  .event { width: 55%; margin: 2.6rem 0 0; position: relative; min-height: 13rem; }
+  .event h3 { margin: 0 0 .5rem; font-size: 1.55rem; }
+  .event h3 .id { font-family: var(--lf); font-style: normal; color: var(--soft); font-size: 1.15rem; margin-right: .5rem; }
+  .event dl { display: grid; grid-template-columns: 6.2rem 1fr; gap: .35rem 1rem; margin: 0; font-size: 1.3rem; line-height: 1.85rem; }
+  .event dt { font-variant: small-caps; letter-spacing: .04em; color: var(--soft); text-transform: lowercase; }
+  .event dd { margin: 0; }
+  .pass { color: #2f6b3a; }
+  .fail { color: var(--red); }
+  .event .v { font-variant: small-caps; letter-spacing: .03em; }
+  code { background: #f6f6f4; padding: 0 .2em; border-radius: 2px; }
+  @media (min-width: 761px) { table.numbers td:nth-child(-n+2) { white-space: nowrap; } }
+  table.booktabs.wide { width: 90%; font-size: 1.1rem; line-height: 1.5; }
+  table.booktabs.wide td { padding-bottom: .5rem; }
+  ul.api { list-style: none; padding: 0; }
+  ul.api li { padding: .2rem 0; }
+  ul.api code { background: none; padding: 0; font-size: 1.05rem; }
+  @media (max-width: 760px) {
+    .event { width: 100%; } .event dl { grid-template-columns: 1fr; gap: 0; } .event dt { margin-top: .4rem; }
+    .event { min-height: 0; }
+    .vfig { position: static; width: 100%; max-width: 440px; margin: 0 0 .6rem; }
+  }
+</style>
+</head>
+<body>
+<article>
+  <div class="back"><a href="/">← Hussain Abuwala</a></div>
+  <h1>URL Shortener</h1>
+  <p class="subtitle">Built and load-tested event by event, up to 10% of Bitly’s traffic. October 2026.</p>
+
+  <section>
+    <p><span class="newthought">I built a URL shortener</span> on one server and ran nine scripted events against it: more traffic, new requirements, and failures. When an event broke the design, I changed it only enough to pass. The final version handles about 877 million redirects a month at a 14.8 ms p99, with no errors, for €9.56 a month.</p>
+    <p class="tools">TypeScript · Node.js · SQLite · nginx · Litestream · Linux · Bash · k6 · Python</p>
+    <p class="links"><a href="https://github.com/HussainAbuwala/systems-from-first-principles/tree/main/episodes/url-shortener">Code and raw results</a><a href="https://github.com/HussainAbuwala/systems-from-first-principles/blob/main/episodes/url-shortener/scoreboard.md">Scoreboard</a></p>
+    <figure>
+      <button class="video" data-yt="OyONzk9LBx0" aria-label="Play the video: URL Shortener System Design, Actually Built and Load-Tested"></button>
+      <div class="video-note">The full build and every test run, 1 h 39 min. In the video, versions are called stages. Loads YouTube when you press play.</div>
+    </figure>
+  </section>
+
+  <!-- ===================================================== 1. Motivation -->
+  <section>
+    <h2>What a URL shortener does</h2>
+    <p>You paste a long link and get a short one, like <code>bit.ly/FXsk</code>. Anyone who opens the short link is sent to the long one. Short links are used where long ones don’t fit or are hard to type: social posts, text messages, printed material and QR codes. The service also counts clicks, which is often the reason a company uses one.</p>
+    <p>It is a common system design question because it is easy to state but touches most of the core topics: generating unique IDs, a read-heavy workload, popular keys, counting writes cheaply, durability, and recovering from failure.</p>
+
+    <h3>Requirements</h3>
+    <p>Functional, with the event that introduces each one:</p>
+    <ul>
+      <li>Create a short link for any http or https URL up to 2,048 characters; the code is at most 7 letters and digits. <span class="num">(E01)</span></li>
+      <li>Redirect a short link to its URL; unknown codes get “not found”. <span class="num">(E01)</span></li>
+      <li>Let a creator choose a custom name, with exactly one owner per name. <span class="num">(E03)</span></li>
+      <li>Show clicks per link per day, at most 60 s behind and within 1%. <span class="num">(E05)</span></li>
+      <li>Let an operator take a link down; it must stop redirecting within 60 s, browsers included. <span class="num">(E09)</span></li>
+    </ul>
+    <p>Non-functional:</p>
+    <ul>
+      <li>Redirect p99 under 100 ms, create p99 under 300 ms, errors under 0.1%.<label for="sn-why" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-why" class="margin-toggle"/><span class="sidenote">100 ms is about where a response stops feeling instant (Nielsen). p99, not the average: at 1,000 clicks a second the slowest 1% is still 10 people every second (Dean and Barroso, <i>The Tail at Scale</i>).</span></li>
+      <li>Power cut: no acknowledged link lost, redirects back within 5 minutes.</li>
+      <li>Machine lost: back within 1 hour, losing at most the last 5 minutes of new links. In interview terms, an RTO of 1 hour and an RPO of 5 minutes.</li>
+    </ul>
+  </section>
+
+  <!-- ===================================================== 2. Numbers -->
+  <section>
+    <h2>The numbers</h2>
+    <p>Scale is measured against Bitly, which reports over 100 billion clicks and 2 billion new links a year.<label for="sn-bitly" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-bitly" class="margin-toggle"/><span class="sidenote"><a href="https://bitly.com/pages/about">bitly.com/pages/about</a>, checked 1 October 2026.</span> The target here is 10% of that.</p>
+    <table class="booktabs numbers">
+      <thead><tr><th>Quantity</th><th class="r">Value</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Bitly, average</td><td class="r">3,200/s</td><td>100 B clicks ÷ seconds in a year</td></tr>
+        <tr><td>Reads per write</td><td class="r">50 : 1</td><td>100 B clicks ÷ 2 B links</td></tr>
+        <tr><td>Peak factor</td><td class="r">3</td><td>assumed: the busiest time is 3× the daily average</td></tr>
+        <tr><td>Peak redirects</td><td class="r">1,000/s</td><td>target: 10% of Bitly’s peak</td></tr>
+        <tr><td>Peak creates</td><td class="r">20/s</td><td>1,000 ÷ 50</td></tr>
+        <tr><td>Clicks a month</td><td class="r">877 M</td><td>average (peak ÷ 3) × 2,629,800 s</td></tr>
+        <tr><td>Links a month</td><td class="r">17.5 M</td><td>same formula, from 20/s</td></tr>
+        <tr><td>Links stored</td><td class="r">100 M</td><td>about six months of creation</td></tr>
+        <tr><td>Database size</td><td class="r">12 GB</td><td>measured, at 100 M links</td></tr>
+        <tr><td>Bytes per link</td><td class="r">≈ 120</td><td>12 GB ÷ 100 M, with index</td></tr>
+      </tbody>
+    </table>
+    <p>The system is sized for the peak, because that is when it breaks. Monthly totals use the average: 1,000 ÷ 3 ≈ 333 redirects a second, over the 2,629,800 seconds in a month.</p>
+    <p>Two traffic details matter more than they look. Clicks follow a Zipf distribution, so a few links get most of them. And every click opens a new HTTPS connection, because short links are mostly clicked once by different people. That second detail turned out to drive most of the CPU cost.</p>
+
+    <h3>How long the codes need to be</h3>
+    <p>Each character of a code is a letter or a digit: 26 + 26 + 10 = 62 options. So a code of <i>n</i> characters has 62<sup>n</sup> possible values. Dividing by the 17.5 million links created a month shows how long each length lasts:</p>
+    <table class="booktabs numbers">
+      <thead><tr><th>Characters</th><th class="r">Possible codes</th><th>Runs out after</th></tr></thead>
+      <tbody>
+        <tr><td>4</td><td class="r">14.8 million</td><td>under a month</td></tr>
+        <tr><td>5</td><td class="r">916 million</td><td>about 4 years</td></tr>
+        <tr><td>6</td><td class="r">56.8 billion</td><td>about 270 years</td></tr>
+      </tbody>
+    </table>
+    <p>The requirement allows 7 characters, so codes never run out. Because codes count up from 1, they also stay as short as possible: link 10,000,000 is <code>FXsk</code>.</p>
+
+    <h3>API and data model</h3>
+    <ul class="api">
+      <li><code>POST /links</code> with <code>{"url": …, "name": …}</code> → <code>201</code> and the short link; <code>409</code> if the name is taken.</li>
+      <li><code>GET /&lt;code&gt;</code> → <code>301</code> to the URL, with <code>Cache-Control: no-store</code>; <code>404</code> unknown; <code>410</code> taken down.</li>
+      <li><code>GET /links/&lt;code&gt;/stats</code> → clicks per day.</li>
+      <li><code>POST /links/&lt;code&gt;/takedown</code> with an operator secret.</li>
+    </ul>
+    <p>Three tables: <code>links(id, url, created_at, taken_down_at)</code>, <code>names(name, url, created_at, taken_down_at)</code>, and <code>clicks(code, day, count)</code>. A generated code is the link’s row number written in base 62. Custom names must contain a hyphen or be longer than 7 characters, so they can never collide with a generated code.</p>
+  </section>
+
+  <!-- ===================================================== 3. Events -->
+  <section>
+    <h2>Event by event</h2>
+    <p>The nine events were fixed before anything was built and never changed afterwards. Each one runs against the current version. If it passes, nothing changes. If it fails, the smallest fix that passes becomes the next version, and every earlier event is rerun on it. The diagram beside each event shows the version that passed it, with what that version added in red.</p>
+
+
+    <div class="event">
+      <div class="vfig"><svg data-v="0" role="img" aria-label="Version 0"></svg><p class="vcap"><i>v0</i></p></div>
+      <h3><span class="id">E01</span>Launch</h3>
+      <dl>
+        <dt>Event</dt><dd>1 redirect/s, 1 create a minute, 1,000 links.</dd>
+        <dt>Version</dt><dd><span class="v">v0</span>: one Node.js program with SQLite in one file, serving HTTPS itself, on a 2-vCPU server. Codes are a counting-up number in base 62.</dd>
+        <dt>Result</dt><dd><span class="pass">Pass.</span></dd>
+      </dl>
+    </div>
+
+    <div class="event">
+      <div class="vfig"><svg data-v="0" role="img" aria-label="Version 0"></svg><p class="vcap"><i>v0</i> · unchanged</p></div>
+      <h3><span class="id">E02</span>1% of Bitly</h3>
+      <dl>
+        <dt>Event</dt><dd>100 redirects/s, 2 creates/s, 10 million links (1.2 GB).</dd>
+        <dt>Version</dt><dd><span class="v">v0</span>, unchanged.</dd>
+        <dt>Result</dt><dd><span class="pass">Pass</span>, redirect p99 17.7 ms. No cache, queue or load balancer needed.</dd>
+      </dl>
+    </div>
+
+    <div class="event">
+      <div class="vfig"><svg data-v="1" role="img" aria-label="Version 1"></svg><p class="vcap"><i>v1</i> · SQLite: names table added</p><svg data-v="2" role="img" aria-label="Version 2"></svg><p class="vcap"><i>v2</i> · added: nginx for TLS</p></div>
+      <h3><span class="id">E03</span>Custom names</h3>
+      <dl>
+        <dt>Event</dt><dd>Under E02 load, 50 clients claim the same name at the same moment, repeated with 1,000 names. Exactly one may win each time.</dd>
+        <dt>Version</dt><dd><span class="v">v0</span>.</dd>
+        <dt>Result</dt><dd><span class="fail">Fail.</span> v0 ignored names, so two creators both “won” the same one.</dd>
+        <dt>Fix</dt><dd><span class="v">v1</span>: a <code>names</code> table. One process checks and saves each claim, so claims are handled one at a time. Correct in every round, but redirect p99 jumped to 179.5 ms: bursts of 50 new TLS handshakes queued on Node’s single thread.</dd>
+        <dt>Fix</dt><dd><span class="v">v2</span>: nginx in front to terminate TLS on both cores; Node gets plain HTTP on localhost.</dd>
+        <dt></dt><dd class="note">First try: nginx reused idle connections that Node had already closed, causing 502s. Setting nginx’s upstream <code>keepalive_timeout</code> to 4 s, below Node’s, fixed it.</dd>
+        <dt>Result</dt><dd><span class="pass">Pass</span>, p99 69.2 ms.</dd>
+      </dl>
+    </div>
+
+    <div class="event">
+      <div class="vfig"><svg data-v="3" role="img" aria-label="Version 3"></svg><p class="vcap"><i>v3</i> · added: 4 vCPUs</p></div>
+      <h3><span class="id">E04</span>A viral link</h3>
+      <dl>
+        <dt>Event</dt><dd>On top of E02 load, one link ramps to 2,000 redirects/s and holds for 10 minutes.</dd>
+        <dt>Version</dt><dd><span class="v">v2</span>.</dd>
+        <dt>Result</dt><dd><span class="fail">Fail.</span> Out of CPU. About 2,100 new TLS connections a second is the cost, not the database.</dd>
+        <dt>Fix</dt><dd><span class="v">v3</span>: the same software on 4 vCPUs.</dd>
+        <dt>Result</dt><dd><span class="pass">Pass</span>, p99 14.6 ms.</dd>
+      </dl>
+    </div>
+
+    <div class="event">
+      <div class="vfig"><svg data-v="4" role="img" aria-label="Version 4"></svg><p class="vcap"><i>v4</i> · added: click counts in memory, saved once a second</p></div>
+      <h3><span class="id">E05</span>Click counts</h3>
+      <dl>
+        <dt>Event</dt><dd>Rerun E04 with counting on. Counts per link per day, at most 60 s behind and within 1%.</dd>
+        <dt>Version</dt><dd><span class="v">v3</span> has no counts. The first try saved every click before redirecting.</dd>
+        <dt>Result</dt><dd><span class="fail">Fail.</span> It collapsed at about 166 saves a second, with Node’s thread waiting on the disk and 91% errors.</dd>
+        <dt>Fix</dt><dd><span class="v">v4</span>: count in memory and save all counts once a second in one transaction: one disk wait per second instead of one per click. Redirects carry <code>Cache-Control: no-store</code>, so browsers can’t skip the server on repeat clicks.</dd>
+        <dt>Result</dt><dd><span class="pass">Pass.</span> 1,355,748 clicks counted, exactly; p99 14–15 ms.</dd>
+      </dl>
+    </div>
+
+    <div class="event">
+      <div class="vfig"><svg data-v="5" role="img" aria-label="Version 5"></svg><p class="vcap"><i>v5</i> · SQLite: synchronous = EXTRA</p></div>
+      <h3><span class="id">E06</span>Power cut</h3>
+      <dl>
+        <dt>Event</dt><dd>Under E02 load, the server is powered off without warning and started again.</dd>
+        <dt>Version</dt><dd><span class="v">v4</span>.</dd>
+        <dt>Result</dt><dd><span class="fail">Fail.</span> SQLite’s default setting rolled back a link that had already been confirmed, and its code was then given to a different link.</dd>
+        <dt>Fix</dt><dd><span class="v">v5</span>: <code>PRAGMA synchronous = EXTRA</code>, so a confirmed save survives power loss.</dd>
+        <dt>Result</dt><dd><span class="pass">Pass.</span> No confirmed link lost; back in 60–67 s.</dd>
+      </dl>
+    </div>
+
+    <div class="event">
+      <div class="vfig"><svg data-v="6" role="img" aria-label="Version 6"></svg><p class="vcap"><i>v6</i> · SQLite in WAL mode, copied to a volume by Litestream; health check added</p></div>
+      <h3><span class="id">E07</span>Machine lost</h3>
+      <dl>
+        <dt>Event</dt><dd>Under E02 load, the server and its disk are deleted for good. Back within 1 hour, losing at most 5 minutes of new links.</dd>
+        <dt>Version</dt><dd><span class="v">v5</span>.</dd>
+        <dt>Result</dt><dd><span class="fail">Fail.</span> The only copy of the data was on the deleted disk.</dd>
+        <dt>Fix</dt><dd><span class="v">v6</span>: WAL mode, and Litestream copies every change to a separate volume that outlives the server. A new link is confirmed only once it is in the copy. A monitor checks <code>/health</code>, and one script rebuilds the server on the same IP address.</dd>
+        <dt></dt><dd class="note">Two tries failed first. Copying in the background let a restore reissue a lost link’s code. Then a rebuild stopped because Hetzner had no server of that type free, so the script now retries for 20 minutes before falling back to another type.</dd>
+        <dt>Result</dt><dd><span class="pass">Pass.</span> Back 3.4–5.9 minutes after the loss, nothing confirmed lost.</dd>
+      </dl>
+    </div>
+
+    <div class="event">
+      <div class="vfig"><svg data-v="7" role="img" aria-label="Version 7"></svg><p class="vcap"><i>v7</i> · Node.js: counter jumps a million after a restore</p></div>
+      <h3><span class="id">E08</span>10% of Bitly</h3>
+      <dl>
+        <dt>Event</dt><dd>1,000 redirects/s, 20 creates/s, 100 million links (12 GB, more than the server’s 8 GB of memory).</dd>
+        <dt>Version</dt><dd><span class="v">v6</span>.</dd>
+        <dt>Result</dt><dd><span class="fail">Fail.</span> Create p99 reached 753–848 ms, because every create waited for the copy while Litestream rewrote it.</dd>
+        <dt>Fix</dt><dd><span class="v">v7</span>: generated links are confirmed on local disk again. After any restore, the counter jumps a million ahead, so a code lost with the machine is never reused. Custom names still wait for the copy.</dd>
+        <dt></dt><dd class="note">First try froze the app for 30.5 s: after a fresh full copy, Litestream’s checkpoint scanned the whole 1.7 GB copy while holding the write lock. A one-row write every second keeps that scan small.</dd>
+        <dt>Result</dt><dd><span class="pass">Pass.</span> Redirect p99 14.5 ms, create p99 22.3 ms.</dd>
+      </dl>
+    </div>
+
+    <div class="event">
+      <div class="vfig"><svg data-v="8" role="img" aria-label="Version 8"></svg><p class="vcap"><i>v8</i> · added: takedowns</p></div>
+      <h3><span class="id">E09</span>Takedowns</h3>
+      <dl>
+        <dt>Event</dt><dd>Under E08 load, 100 links are taken down. None may redirect more than 60 s later.</dd>
+        <dt>Version</dt><dd><span class="v">v7</span> had no way to remove a link.</dd>
+        <dt>Fix</dt><dd><span class="v">v8</span>: <code>POST /links/&lt;code&gt;/takedown</code> with an operator secret; the link answers <code>410 Gone</code> from the next click.</dd>
+        <dt>Result</dt><dd><span class="pass">Pass.</span> Zero redirects after any of 300 takedowns across three runs. Redirect p99 14.8 ms, create p99 26.2 ms.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ===================================================== Measurements -->
+  <section>
+    <h2>What was measured, and what it caught</h2>
+    <p>Every run recorded what users feel and what each resource was doing, once a second. A break was diagnosed only when a measurement named the resource that ran out.</p>
+
+    <h3>What users feel</h3>
+    <table class="booktabs wide">
+      <thead><tr><th>Measured</th><th>What it shows</th><th>What it caught here</th></tr></thead>
+      <tbody>
+        <tr><td>p50, p95 and p99 latency, per 10-second window</td><td>How slow the slowest requests are, and when</td><td>The 30.5 s freeze in E08, which one number per run would have hidden. On v1, p99 was over 100 ms in all 30 windows of E03</td></tr>
+        <tr><td>Latency split into TCP connect, TLS handshake and server response</td><td>Where the time goes</td><td>The slow hosts: opening the connection took an extra 50–60 ms while the server answered in about 3 ms</td></tr>
+        <tr><td>Error rate</td><td>Failed or timed-out requests</td><td>The 502s from nginx reusing connections Node had closed (v2, first try)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Which resource ran out</h3>
+    <table class="booktabs wide">
+      <thead><tr><th>Measured</th><th>What it shows</th><th>What it caught here</th></tr></thead>
+      <tbody>
+        <tr><td>CPU per process</td><td>Which program uses the CPU</td><td>In E03, Node never used a whole core in any second (peak 74%), yet one redirect in eight took over 100 ms: 50 handshakes of about 1.8 ms each queued within a fraction of a second. Per-second averages hide bursts. At E08: nginx about 1 core, Litestream up to 1.5, Node about a quarter</td></tr>
+        <tr><td>iowait</td><td>CPU idle because it is waiting for the disk</td><td>Saving every click: iowait 15% with the CPU mostly idle, so the disk was the limit (E05, first try)</td></tr>
+        <tr><td>CPU steal</td><td>The host giving CPU time to other customers’ machines</td><td>0% in E03, which ruled out a noisy neighbour: the problem was in the design</td></tr>
+        <tr><td>Memory and page cache</td><td>Whether the data fits in memory</td><td>12 GB database on an 8 GB server: programs used about 1.5 GB, and the rest cached the database (E08)</td></tr>
+        <tr><td>Connections waiting or turned away</td><td>Requests queued because no program can accept them</td><td>nginx ran out of connection slots when Node stalled on the disk (E05, first try)</td></tr>
+        <tr><td>Write-lock probe</td><td>How long the database write lock is held</td><td>Litestream’s checkpoint holding the lock for 30.5 s (E08)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================================================== Final design -->
+  <section>
+    <h2>The final design</h2>
+    <ul>
+      <li>One server with 4 vCPUs and 8 GB of memory.</li>
+      <li>nginx terminates TLS and passes requests to one Node.js program on the same machine.</li>
+      <li>SQLite in one file: WAL mode, <code>synchronous = EXTRA</code>.</li>
+      <li>Click counts kept in memory and saved once a second.</li>
+      <li>Litestream copies every change to a separate volume; a script rebuilds on a new server with the same IP.</li>
+      <li>An external monitor checks <code>/health</code> every 30 s.</li>
+    </ul>
+    <p><label for="mn-cost" class="margin-toggle">&#8853;</label><input type="checkbox" id="mn-cost" class="margin-toggle"/><span class="marginnote"><span class="minitab" style="grid-template-columns:1fr auto"><span class="h rule">Monthly cost</span><span class="h r rule">€</span><span>4-vCPU server</span><span class="r">8.49</span><span>IPv4 address</span><span class="r">0.50</span><span>10 GB volume for the copy</span><span class="r">0.57</span><span>Monitoring</span><span class="r">0.00</span><span class="top">Total</span><span class="r top">9.56</span></span>Hetzner prices, excluding VAT, checked 3 and 5 October 2026.</span>At the largest run, 1,000 redirects a second with peak traffic assumed to be three times the average:</p>
+    <p class="eq num">1,000 redirects/s ÷ 3 × 2,629,800 s/month ≈ 877 million redirects/month</p>
+    <p>What runs out next is CPU. In the largest run it averaged about 50%: nginx used about one core for TLS, and Litestream up to one and a half while rewriting its copy.</p>
+  </section>
+
+  <!-- ===================================================== 4. Caveats -->
+  <section>
+    <h2>Caveats</h2>
+    <ul>
+      <li><b>One event at a time.</b> Combinations, like a viral spike during a power cut, were never tested.</li>
+      <li><b>Failures at a smaller scale.</b> The power cut and the machine loss ran at 1% of Bitly’s traffic with 10 million links. At 100 million links, restoring alone takes about 3 minutes.</li>
+      <li><b>Measured next door.</b> The load generator sat in the same data centre, so the times don’t include visitors’ own internet connection.</li>
+      <li><b>One machine, one data centre.</b> The copy lives in the same location, so losing the whole data centre isn’t covered.</li>
+      <li><b>No domain.</b> Links used the server’s IP address and a self-made certificate. A real service needs a domain and a proper certificate.</li>
+      <li><b>An assumed peak factor.</b> The monthly figure assumes peak traffic is three times the average. Only the 1,000 redirects/s peak was measured, and no capacity above it is claimed.</li>
+      <li><b>Slow hosts.</b> On some Hetzner hosts about 1.5% of new TCP connections took an extra 50–60 ms to open, putting redirect p99 near 100–118 ms in two of three machine-loss runs. The server’s own response stayed about 3 ms.</li>
+    </ul>
+  </section>
+
+  <!-- ===================================================== 5. Learnings -->
+  <section>
+    <h2>What this taught me about system design</h2>
+    <ol>
+      <li><b>Start simple and add parts on evidence.</b> One process and one SQLite file served 100 million links at 1,000 redirects a second with a p99 around 15 ms.</li>
+      <li><b>Find the real bottleneck before adding parts.</b> It was TLS handshakes from new connections, not the database. nginx was added for TLS on more cores, not for load balancing.</li>
+      <li><b>Batch frequent small writes.</b> Saving per click collapsed at 166 a second; saving once a second counted over a million clicks exactly at 2,000 a second.</li>
+      <li><b>Know what “saved” means.</b> A database default can roll back a write it already confirmed. Decide what an acknowledgement promises, then test it by pulling the plug.</li>
+      <li><b>A counter is a fine ID generator.</b> It is unique by construction. Its one risk, reusing codes after a restore, is closed by jumping ahead. No separate key service needed.</li>
+      <li><b>Every cache has a cost.</b> A cache or CDN would have broken click counting and made takedowns slow. Without one, takedowns work from the next click.</li>
+      <li><b>Set recovery targets first.</b> An RTO of 1 hour and an RPO of 5 minutes were met with a continuous copy and a rebuild script, for 57 cents a month.</li>
+      <li><b>Watch p99, not averages.</b> The 30-second freeze and the slow connections only showed up in the tail.</li>
+    </ol>
+  </section>
+
+  <!-- ===================================================== Interview notes -->
+  <section>
+    <h2>What usual designs add, and when you’d need it</h2>
+    <p>The usual interview answer for a URL shortener includes the components below. None were needed for these requirements. Each one would be needed if the requirements changed.</p>
+    <table class="booktabs wide">
+      <thead><tr><th>Usual component</th><th>What it’s for</th><th>Not needed here because</th><th>You’d need it if</th></tr></thead>
+      <tbody>
+        <tr><td>Load balancer and several app servers</td><td>More CPU than one machine; no single point of failure</td><td>One server averaged about 50% CPU at 1,000 redirects/s, and a few minutes of downtime was allowed (RTO 1 hour)</td><td>Traffic beyond what was tested (Bitly’s full scale was not), or minutes of downtime are not acceptable</td></tr>
+        <tr><td>Cache (Redis)</td><td>The database is too slow or too far away for popular links</td><td>SQLite ran in the same process and the operating system kept popular links in memory: p99 about 15 ms with a 12 GB database. Without a cache, takedowns applied at once</td><td>The database is on another machine, so every lookup crosses the network, or several app servers share it</td></tr>
+        <tr><td>Sharded or NoSQL database</td><td>Data or writes too large for one machine</td><td>100 million links fit in 12 GB, and 20 creates/s is light for one writer</td><td>Far more links or writes than tested, or writes from several regions</td></tr>
+        <tr><td>Key-generation service, or random codes</td><td>Unique codes from many servers without coordination</td><td>One process hands out counting-up numbers, so codes are unique by construction</td><td>Several servers create links, or codes must be hard to guess: counting-up codes can be enumerated (FXsk, FXsl, …)</td></tr>
+        <tr><td>Queue or stream for clicks (Kafka)</td><td>Detailed analytics, several consumers, decoupling</td><td>Only daily counts per link were needed; an in-memory tally saved once a second was exact</td><td>Per-click analytics (referrer, location, device), several teams reading clicks, or counts that must survive a crash exactly</td></tr>
+        <tr><td>CDN or edge caching</td><td>Low latency for users around the world</td><td>One region was tested, and cached redirects would skip click counting and delay takedowns</td><td>Latency targets on several continents</td></tr>
+        <tr><td>Standby server or several regions</td><td>Fast failover; surviving a data-centre outage</td><td>The 1-hour RTO was met by a rebuild in minutes</td><td>An RTO of seconds, or surviving the loss of a whole data centre</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer class="colophon">
+    <a href="https://github.com/HussainAbuwala/systems-from-first-principles/tree/main/episodes/url-shortener">Code</a><a href="https://github.com/HussainAbuwala/systems-from-first-principles/blob/main/episodes/url-shortener/interview-cut.md">Interview cut</a><a href="https://github.com/HussainAbuwala/systems-from-first-principles/blob/main/episodes/url-shortener/scoreboard.md">Scoreboard</a><a href="https://github.com/HussainAbuwala/systems-from-first-principles/issues">Report an error</a>
+    <p style="margin:.6rem 0 0;font-size:1.1rem">Corrections: none yet.</p>
+  </footer>
+</article>
+
+<script>
+/* One diagram per version, drawn beside the event it passed. Red marks what that version added. */
+// what each version changed; the caption under the diagram names it
+const ADDED = { 0: [], 1: ['db'], 2: ['nginx'], 3: ['frame'], 4: ['counts'], 5: ['db'], 6: ['db', 'copy', 'mon'], 7: ['node'], 8: ['ops'] };
+function diagram(v) {
+  const isNew = k => ADDED[v].includes(k), c = k => isNew(k) ? ' new' : '';
+  const box = (k, x, y, w, h, label, ty) => `<rect class="b${c(k)}" x="${x}" y="${y}" width="${w}" height="${h}"/>` +
+    `<text class="${c(k).trim()}" x="${x + w / 2}" y="${ty || y + h / 2 + 4}" text-anchor="middle">${label}</text>`;
+  const sub = (k, x, y, label) => `<text class="s${c(k)}" x="${x}" y="${y}" text-anchor="middle">${label}</text>`;
+  const big = v >= 3, top = big ? 14 : 24, h = big ? 132 : 112;
+  let s = `<rect class="fr${c('frame')}" x="66" y="${top}" width="186" height="${h}"/>`;
+  s += `<text class="s${c('frame')}" x="70" y="${top + h - 5}" text-anchor="start">${big ? '4 vCPU' : '2 vCPU'}</text>`;
+  s += box('users', 4, 62, 50, 28, 'users');
+  if (v >= 2) { s += box('nginx', 74, 62, 46, 28, 'nginx'); s += `<path class="w" d="M54 76 H74 M120 76 H128"/>`; }
+  else s += `<path class="w" d="M54 76 H128"/>`;
+  s += box('node', 128, 59, 52, 34, 'Node.js');
+  s += box('db', 190, 59, 56, 34, 'SQLite');
+  s += `<path class="w" d="M180 76 H190"/>`;
+  if (v >= 4) { s += box('counts', 114, 104, 74, 22, '<tspan style="font-size:10.5px">clicks in RAM</tspan>', 119); s += `<path class="w d" d="M154 93 V104"/>`; }
+  if (v >= 6) {
+    s += box('copy', 264, 59, 52, 34, 'copy', 72) + sub('copy', 290, 86, 'Litestream');
+    s += `<path class="w" d="M246 76 H264"/>`;
+    s += box('mon', 264, 6, 52, 24, '<tspan style="font-size:11px">/health</tspan>');
+    s += `<path class="w d" d="M264 18 H252"/>`;
+  }
+  if (v >= 8) { s += box('ops', 2, 6, 56, 24, '<tspan style="font-size:11px">takedown</tspan>'); s += `<path class="w d" d="M56 18 H154 V59"/>`; }
+  return s;
+}
+document.querySelectorAll('svg[data-v]').forEach(el => {
+  // early versions have nothing outside the server, so they don't need the right-hand space
+  el.setAttribute('viewBox', +el.dataset.v >= 6 ? '0 0 320 150' : '0 0 258 150');
+  el.innerHTML = diagram(+el.dataset.v);
+});
+</script>
+<script src="/assets/synonyms.js?v=2e1f3543"></script>
+<script src="/assets/site.js?v=6a29193d"></script>
+</body>
+</html>

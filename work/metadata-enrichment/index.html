@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metadata Enrichment · Hussain Abuwala</title>
+<meta name="description" content="Rebuilding how IBM watsonx BI understands the columns of a dataset: from an external enrichment step to an LLM pipeline, at 99.8% lower cost.">
+<link rel="canonical" href="https://hussainabuwala.github.io/work/metadata-enrichment/">
+<link rel="stylesheet" href="/assets/tufte.css?v=5006481b">
+<style>
+  table.booktabs.wide { width: 90%; font-size: 1.1rem; line-height: 1.5; }
+  table.booktabs.wide td { padding-bottom: .45rem; }
+  table.booktabs code, p code { font-family: var(--mono); font-size: .95rem; }
+  .flow { font-family: var(--lf); font-size: 1.25rem; color: var(--soft); }
+  ul li { padding: .3rem 0; }
+  @media (min-width: 761px) { table.booktabs.wide td:first-child { white-space: nowrap; } }
+</style>
+</head>
+<body>
+<article>
+  <div class="back"><a href="/">← Hussain Abuwala</a></div>
+  <h1>Metadata Enrichment</h1>
+  <p class="subtitle">How IBM watsonx BI understands a dataset, rebuilt twice. IBM, 2024–2026.</p>
+
+  <section>
+    <p><span class="newthought">IBM watsonx BI answers</span> business questions about a dataset in plain language. Before it can do that, it has to understand every column: a readable name and description, what the column represents (a city, a date, a state), and how it should be used: as a number to add up or average, a category to group by, or an identifier. Producing that understanding is metadata enrichment.</p>
+    <p>I worked on both versions. The first was built around an existing enrichment service from another IBM product, with our own processing on top. The second replaced that service with our own LLM pipeline.</p>
+    <p class="tools">Java · Node.js · TypeScript · LLMs · Embeddings · RabbitMQ · Kubernetes</p>
+  </section>
+
+  <section>
+    <h2>Why it matters</h2>
+    <p>Almost every feature of the product reads what enrichment produces:</p>
+    <table class="booktabs wide">
+      <thead><tr><th>What enrichment decides</th><th>Where it shows up</th><th>If it is wrong</th></tr></thead>
+      <tbody>
+        <tr><td>Readable names and descriptions</td><td>Answers, chart labels, search</td><td>Users see <code>cst_unt</code> instead of “Cost per Unit”, and search cannot find the column</td></tr>
+        <tr><td>What a column holds: a city, a date, a state</td><td>Finding the right column for “sales by state”; time on a chart’s x-axis</td><td>“Jan 2020” is treated as plain text, so there is no trend over time</td></tr>
+        <tr><td>Number or category</td><td>Which columns are added up and which are grouped; which chart is suggested</td><td>Postal codes get added up, and the wrong chart is suggested</td></tr>
+        <tr><td>Sum or average</td><td>Totals in answers; which numbers can share a chart</td><td>“Total price per kg”, a confident wrong number</td></tr>
+        <tr><td>How strongly columns relate to each other</td><td>“Why” questions, such as why revenue fell: finding the columns most likely to explain it</td><td>The explanation points at a column that has nothing to do with it, such as an ID or a budget column</td></tr>
+        <tr><td>Prepared sample values</td><td>Matching the words in a question to the values stored in the data</td><td>“New York” does not find “NYC”, so the filter is missing and the answer covers everything</td></tr>
+      </tbody>
+    </table>
+    <p>A mistake in enrichment does not stay in enrichment. It shows up as a wrong answer, a wrong chart, or a search that finds nothing.</p>
+  </section>
+
+  <section>
+    <h2>The problem</h2>
+    <p>The first version had three problems: it was expensive, at $5.32 to enrich one data asset; it was slow; and it misread many columns. Most accuracy problems came from two sources: matching values against fixed lists and patterns, and relying too much on column names.</p>
+    <table class="booktabs wide">
+      <thead><tr><th>Column</th><th>What it holds</th><th>First version</th><th>Correct</th></tr></thead>
+      <tbody>
+        <tr><td><code>zip5</code>, <code>plz_de</code></td><td>US and German postal codes</td><td>a number to add up</td><td>a category</td></tr>
+        <tr><td><code>on_time_flg</code></td><td>0 or 1</td><td>a number to add up</td><td>a category</td></tr>
+        <tr><td><code>salary_band</code></td><td>salary tiers</td><td>a number to add up</td><td>a category</td></tr>
+        <tr><td><code>x_coord</code></td><td>x-axis coordinates</td><td>a number to add up</td><td>a category</td></tr>
+        <tr><td><code>price_per_kg</code>, <code>speed_mph</code></td><td>rates per unit</td><td>summed</td><td>averaged</td></tr>
+        <tr><td><code>city_code</code></td><td>NYC, LA, CHI</td><td>not recognized</td><td>a city</td></tr>
+        <tr><td><code>opening_date</code></td><td>Jan 2020, Feb 2020</td><td>not recognized</td><td>a date</td></tr>
+        <tr><td><code>region_name</code></td><td>US states</td><td>a country or region</td><td>a state</td></tr>
+      </tbody>
+    </table>
+    <p>These matter because they change answers. Adding up postal codes, or summing prices per kilogram instead of averaging them, gives a user a confident, wrong number.</p>
+  </section>
+
+  <section>
+    <h2>The solution</h2>
+
+    <h3>A model that reads meaning, not just names</h3>
+    <p>The second version uses an LLM that understands what values mean. It knows NYC is a city and a price per kilogram is a rate, without a list or a pattern for either. It looks at more than the column name: the data type, sample values, and how many distinct values the column has. That is how it tells postal codes from quantities, even though both are numbers.</p>
+
+    <h3>Smaller prompts instead of one large one</h3>
+    <p>A model often does better when a large task is split into several smaller prompts, each asking for one clear decision. Deciding how a column should be used works this way: simple rules settle the obvious columns first, and the rest go through a few narrow questions in turn.</p>
+
+    <h3>Wide tables</h3>
+    <p>Some tables have hundreds of columns, too many to handle well in one request. They are split into batches that keep neighbouring columns together. A few batches run at a time, with a short pause between groups so the model service is not overloaded. A one-paragraph summary of the whole table, written from the column names alone, goes with every batch, so each batch knows what the table is about.</p>
+
+    <h3>Reliable output</h3>
+    <ul>
+      <li>The model must return JSON that matches a defined schema, written with Zod and requested through the Vercel AI SDK. The response is checked against the schema before anything uses it.</li>
+      <li>Failed calls are retried with exponential backoff.</li>
+      <li>Each step stops the run cleanly if it fails, and records how long it took.</li>
+      <li>If sample values are not available, enrichment continues with a shallower analysis instead of failing.</li>
+    </ul>
+
+    <h3>Respecting people’s edits</h3>
+    <p>Users can correct the names, descriptions and other details enrichment produces. Enrichment never overwrites a value a user has already accepted or defined.</p>
+
+  </section>
+
+  <section>
+    <h2>Rolling it out safely</h2>
+    <p>The first version was already serving customers, so the second could not simply replace it.</p>
+    <ul>
+      <li><b>A switch, not a deploy.</b> Enrichment starts from messages on a queue. A configuration setting decides whether a new dataset goes down the old path or the new one, so traffic can move to the new version, or back, without changing code.</li>
+      <li><b>Versioned results.</b> Every result records which version produced it. Small improvements within a version can be applied when a result is read, if the caller allows it. A move from the first version to the second never happens automatically; it needs an explicit rebuild. A customer’s column names and settings never change without someone choosing it.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+    <table class="booktabs">
+      <thead><tr><th></th><th class="r">First version</th><th class="r">Second version</th></tr></thead>
+      <tbody>
+        <tr><td>Cost to enrich one data asset</td><td class="r">$5.32</td><td class="r">$0.009</td></tr>
+        <tr><td>Speed</td><td class="r">1×</td><td class="r">6.5×</td></tr>
+        <tr><td>Accuracy</td><td class="r">—</td><td class="r">above 90%</td></tr>
+      </tbody>
+    </table>
+    <p>Cost fell 99.8%, which meant $19K in monthly customer savings. Accuracy is measured on a benchmark of test tables from many domains, with the correct answer written down for every column. Each step is scored on its own, and the benchmark is rerun as a regression check after changes.</p>
+  </section>
+
+  <footer class="colophon"><a href="/">Hussain Abuwala</a></footer>
+</article>
+<script src="/assets/synonyms.js?v=2e1f3543"></script>
+<script src="/assets/site.js?v=6a29193d"></script>
+</body>
+</html>
