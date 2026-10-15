@@ -204,15 +204,26 @@ details.jd[open] summary::before { content: '− '; }
 .tailor .fit { font-size: 1.15rem; line-height: 1.6rem; color: var(--soft); margin: -.2rem 0 .5rem; }
 @media (max-width: 1000px) { details.jd { width: 100%; } }
 
-/* ---------- phones: text tables become stacked rows (site.js adds .stacked) ---------- */
+/* ---------- phones: a table that does not fit scrolls sideways (site.js adds .long, .scrolls, .scrolled) ---------- */
 @media (max-width: 600px) {
-  table.stacked, table.stacked tbody, table.stacked tr, table.stacked td { display: block; width: 100% !important; }
-  table.stacked thead { display: none; }
-  table.stacked { border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
-  table.stacked tr { padding: .7rem 0 .8rem; border-bottom: 1px solid var(--hair); }
-  table.stacked tr:last-child { border-bottom: 0; }
-  table.stacked td { padding: .1rem 0 !important; white-space: normal !important; text-align: left !important; }
-  table.stacked td:empty { display: none; }
-  table.stacked td:first-child { font-style: italic; padding-bottom: .3rem !important; }
-  table.stacked td:not(:first-child)::before { content: attr(data-label); display: block; margin-top: .3rem; font-size: .95rem; font-style: normal; font-variant: small-caps; letter-spacing: .05em; text-transform: lowercase; color: var(--soft); }
+  table.booktabs { display: block; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  table.booktabs th:last-child, table.booktabs td:last-child { padding-right: 0; }
+  .booktabs .long { min-width: 11.5rem; }
+  .booktabs.snug .long { min-width: 0; }
+  table.booktabs.snug { font-size: 1.05rem; }
+  .booktabs.snug code { font-size: .82em; }
+  .booktabs.snug th, .booktabs.snug td { padding-right: .55rem; }
+  table.booktabs.scrolls {
+    border-collapse: separate; border-spacing: 0;
+    /* edge shadow: a white cover that travels with the content hides the fixed shadow at the end */
+    background:
+      linear-gradient(to left, var(--bg) 40%, rgba(255,255,255,0)) right center / 2.5rem 100% no-repeat local,
+      radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.16), rgba(0,0,0,0)) right center / .8rem 100% no-repeat scroll;
+    background-color: var(--bg);
+  }
+  .booktabs.scrolls th:first-child, .booktabs.scrolls td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg); min-width: 33vw; max-width: 33vw; }
+  .booktabs.snug.scrolls th:first-child, .booktabs.snug.scrolls td:first-child { min-width: 0; max-width: none; }
+  .booktabs.scrolls.scrolled th:first-child, .booktabs.scrolls.scrolled td:first-child { box-shadow: 1px 0 0 var(--hair), 6px 0 6px -6px rgba(0,0,0,.25); }
+  table.booktabs.scrolls:focus-visible { outline: 1px solid var(--soft); outline-offset: 3px; }
+}
 }

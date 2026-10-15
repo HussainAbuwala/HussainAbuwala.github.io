@@ -47,19 +47,41 @@
     }, { once: true });
   });
 
-  /* ---------- tables: on phones, text tables with 3+ columns become stacked rows ---------- */
-  document.querySelectorAll('table.booktabs').forEach(function (t) {
-    var heads = Array.prototype.map.call(t.querySelectorAll('thead th'), function (th) { return th.textContent.trim(); });
-    var cells = t.querySelectorAll('tbody td');
-    var chars = 0;
-    cells.forEach(function (td) { chars += td.textContent.trim().length; });
-    // short numeric tables still fit as a grid; only long text gets squeezed
-    if (t.classList.contains('numbers') || heads.length < 3 || chars / (cells.length || 1) < 12) return;
-    t.classList.add('stacked');
-    t.querySelectorAll('tbody tr').forEach(function (tr) {
-      Array.prototype.forEach.call(tr.children, function (td, i) { if (heads[i]) td.setAttribute('data-label', heads[i]); });
+  /* ---------- tables: on narrow screens, a table that does not fit scrolls sideways ----------
+     Text columns get a readable minimum width (.long), so a wide table overflows instead of
+     squeezing every column. A table that overflows gets .scrolls (pinned first column, edge
+     shadow in CSS) and becomes a labelled, focusable region so keyboards can scroll it too. */
+  var tables = document.querySelectorAll('table.booktabs');
+  tables.forEach(function (t) {
+    var rows = t.querySelectorAll('tr');
+    var longest = [];
+    rows.forEach(function (tr) {
+      Array.prototype.forEach.call(tr.children, function (c, i) {
+        longest[i] = Math.max(longest[i] || 0, c.textContent.trim().length);
+      });
     });
+    rows.forEach(function (tr) {
+      Array.prototype.forEach.call(tr.children, function (c, i) { if (longest[i] > 28) c.classList.add('long'); });
+    });
+    var heading = t.previousElementSibling;
+    while (heading && !/^H[23]$/.test(heading.tagName)) heading = heading.previousElementSibling;
+    t.addEventListener('scroll', function () { t.classList.toggle('scrolled', t.scrollLeft > 2); }, { passive: true });
+    t._label = 'Table' + (heading ? ': ' + heading.textContent.trim() : '') + ' (scrolls sideways)';
   });
+  function markOverflow() {
+    tables.forEach(function (t) {
+      // a table only slightly too wide wraps to fit (.snug drops the minimum widths); scrolling a few pixels is worse than wrapping
+      t.classList.remove('snug');
+      if (t.scrollWidth > t.clientWidth + 1 && t.scrollWidth < t.clientWidth * 1.3) t.classList.add('snug');
+      var over = t.scrollWidth > t.clientWidth + 1;
+      t.classList.toggle('scrolls', over);
+      if (over) { t.setAttribute('role', 'region'); t.setAttribute('tabindex', '0'); t.setAttribute('aria-label', t._label); }
+      else { t.removeAttribute('role'); t.removeAttribute('tabindex'); t.removeAttribute('aria-label'); }
+    });
+  }
+  markOverflow();
+  window.addEventListener('resize', markOverflow);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(markOverflow);
 
   /* ---------- tailoring ---------- */
   var params = new URLSearchParams(location.search);
