@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Number Formatting · Hussain Abuwala</title>
+<meta name="description" content="Currency, percentage and number formatting across answers and charts in IBM watsonx BI, including calculated values and mixed currencies.">
+<link rel="canonical" href="https://hussainabuwala.github.io/work/number-formatting/">
+<link rel="stylesheet" href="/assets/tufte.css?v=9fceb4cb">
+<style>
+  table.booktabs.wide { width: 90%; font-size: 1.1rem; line-height: 1.5; }
+  table.booktabs.wide td { padding-bottom: .45rem; }
+  ul li { padding: .3rem 0; }
+  @media (min-width: 1001px) { table.booktabs.wide td:first-child { white-space: nowrap; } }
+</style>
+</head>
+<body>
+<article>
+  <div class="back"><a href="/">← Hussain Abuwala</a></div>
+  <h1>Number Formatting</h1>
+  <p class="subtitle">Currency, percentages and numbers that read the same in every answer and chart. IBM.</p>
+
+  <section>
+    <p><span class="newthought">A business user should see</span> $1,234,567.89 or 12.5%, not 1234567.886 or 0.125. Users set a format on a column once, such as currency in US dollars or a percentage with one decimal place, and IBM watsonx BI applies it to written answers and to charts. We built formatting across both, including values the system calculates while answering a question.</p>
+    <p class="tools">Node.js · TypeScript · Java · LLMs · Prompt engineering</p>
+    <p class="links"><a href="https://cloud.ibm.com/docs/watsonx-bi?topic=watsonx-bi-format_data">Product documentation</a></p>
+  </section>
+
+  <section>
+    <h2>Why it matters</h2>
+    <p>Unformatted numbers are hard to read and easy to misread: is 0.25 a quarter of something, or 0.25 dollars? For one prospective customer, missing currency and percentage formatting was a blocker to adopting the product.</p>
+  </section>
+
+  <section>
+    <h2>The problems</h2>
+    <ul>
+      <li><b>Calculated values have no format.</b> A question like “profit margin by region” produces columns that exist only in that answer. Nobody has set a format for them.</li>
+      <li><b>Percentages come in two forms.</b> 0.25 and 25 can both mean 25%. Formatting the wrong one shows 2,500% or 0.25%.</li>
+      <li><b>Mixed currencies.</b> Revenue in US dollars minus costs in euros is a number, but not a meaningful one.</li>
+      <li><b>Answers and charts must agree.</b> The same value written in an answer and shown in a chart should look the same.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The solution</h2>
+
+    <h3>One format, used everywhere</h3>
+    <p>Formats set in the data catalog are converted once, during enrichment, into the dataset’s shared description that every service reads. A single shared formatting module turns a value and its format into text, and both written answers and charts use it. When a column has no format, the answer writer is told not to invent one, so a plain number never gains a dollar sign.</p>
+
+    <h3>Inferring formats for calculated values</h3>
+    <p>After a query runs, numeric result columns that are not in the dataset are recognised as calculated. A model reads the SQL and the formats of the columns each value was calculated from, and decides the format:</p>
+    <table class="booktabs wide">
+      <thead><tr><th>Calculation</th><th>Format</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>revenue − cost, both in USD</td><td>currency, USD</td><td>the result keeps the monetary unit</td></tr>
+        <tr><td>(this year − last year) / last year</td><td>percentage, as a fraction</td><td>a relative change</td></tr>
+        <tr><td>same, multiplied by 100</td><td>percentage, already scaled</td><td>the ×100 shows the scale</td></tr>
+        <tr><td>median of price</td><td>same as price</td><td>a percentile of a price is a price</td></tr>
+        <tr><td>revenue in USD − cost in EUR</td><td>none, flagged</td><td>the calculation is not meaningful</td></tr>
+      </tbody>
+    </table>
+    <p>The model may only answer for the calculated columns of that query, in a fixed structure, and must return no format when it is unsure. A missing format is better than a wrong one.</p>
+
+    <h3>Warning about mixed currencies, only when it matters</h3>
+    <p>Showing revenue in dollars next to costs in euros is fine. Subtracting them is not. A separate check reads the question first, then the SQL, and decides whether the answer actually combines different currencies. Only then does the answer get a short note explaining that the comparison is not meaningful. Questions that merely list both values get no warning, even when the query contains extra columns.</p>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+    <p>Answers and charts show currency, percentages and numbers in the format users set, including for values calculated on the fly. It removed an adoption blocker for a prospective customer.</p>
+  </section>
+
+  <footer class="colophon"><a href="/">Hussain Abuwala</a></footer>
+</article>
+<script src="/assets/synonyms.js?v=f3bd44dc"></script>
+<script src="/assets/site.js?v=11e1b8cf"></script>
+</body>
+</html>

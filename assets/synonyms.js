@@ -6,7 +6,9 @@ window.SYNONYMS = {
   "genai",
   "gen ai",
   "generative ai",
-  "gpt"
+  "gpt",
+  "language model",
+  "language models"
  ],
  "Node.js": [
   "node",

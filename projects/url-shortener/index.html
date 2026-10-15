@@ -6,7 +6,7 @@
 <title>URL Shortener · Hussain Abuwala</title>
 <meta name="description" content="A URL shortener system design, built and load-tested event by event up to 10% of Bitly’s traffic: about 877M redirects a month at 14.8 ms p99 for €9.56 a month.">
 <link rel="canonical" href="https://hussainabuwala.github.io/projects/url-shortener/">
-<link rel="stylesheet" href="/assets/tufte.css?v=5006481b">
+<link rel="stylesheet" href="/assets/tufte.css?v=9fceb4cb">
 <style>
   /* the diagram of each version sits beside its event */
   .vfig { position: absolute; left: 108%; top: .2rem; width: 56%; }
@@ -34,13 +34,13 @@
   .fail { color: var(--red); }
   .event .v { font-variant: small-caps; letter-spacing: .03em; }
   code { background: #f6f6f4; padding: 0 .2em; border-radius: 2px; }
-  @media (min-width: 761px) { table.numbers td:nth-child(-n+2) { white-space: nowrap; } }
+  @media (min-width: 1001px) { table.numbers td:nth-child(-n+2) { white-space: nowrap; } }
   table.booktabs.wide { width: 90%; font-size: 1.1rem; line-height: 1.5; }
   table.booktabs.wide td { padding-bottom: .5rem; }
   ul.api { list-style: none; padding: 0; }
   ul.api li { padding: .2rem 0; }
   ul.api code { background: none; padding: 0; font-size: 1.05rem; }
-  @media (max-width: 760px) {
+  @media (max-width: 1000px) {
     .event { width: 100%; } .event dl { grid-template-columns: 1fr; gap: 0; } .event dt { margin-top: .4rem; }
     .event { min-height: 0; }
     .vfig { position: static; width: 100%; max-width: 440px; margin: 0 0 .6rem; }
@@ -376,7 +376,7 @@ document.querySelectorAll('svg[data-v]').forEach(el => {
   el.innerHTML = diagram(+el.dataset.v);
 });
 </script>
-<script src="/assets/synonyms.js?v=2e1f3543"></script>
-<script src="/assets/site.js?v=3c0173f9"></script>
+<script src="/assets/synonyms.js?v=f3bd44dc"></script>
+<script src="/assets/site.js?v=11e1b8cf"></script>
 </body>
 </html>

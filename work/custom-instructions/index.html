@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Custom Instructions · Hussain Abuwala</title>
+<meta name="description" content="Letting business users teach IBM watsonx BI their own definitions in plain language, so answers follow them.">
+<link rel="canonical" href="https://hussainabuwala.github.io/work/custom-instructions/">
+<link rel="stylesheet" href="/assets/tufte.css?v=9fceb4cb">
+<style>
+  table.booktabs.wide { width: 90%; font-size: 1.1rem; line-height: 1.5; }
+  table.booktabs.wide td { padding-bottom: .45rem; }
+  ul li { padding: .3rem 0; }
+  @media (min-width: 1001px) { table.booktabs.wide td:first-child { white-space: nowrap; } }
+</style>
+</head>
+<body>
+<article>
+  <div class="back"><a href="/">← Hussain Abuwala</a></div>
+  <h1>Custom Instructions</h1>
+  <p class="subtitle">Answers that follow a company’s own definitions. IBM.</p>
+
+  <section>
+    <p><span class="newthought">Business users can write rules</span> about their data in plain language, such as “junior roles means levels 6 and 7”, and IBM watsonx BI follows them when it answers questions. We made the rules part of how questions are answered, from finding the right data to writing the SQL.</p>
+    <p class="tools">Node.js · TypeScript · LLMs · Prompt engineering</p>
+    <p class="links"><a href="https://cloud.ibm.com/docs/watsonx-bi?topic=watsonx-bi-instructions_ai">Product documentation</a></p>
+  </section>
+
+  <section>
+    <h2>Why it matters</h2>
+    <p>An LLM can read a table’s columns, but it cannot know a company’s vocabulary. That knowledge is not in the data. Without it, the model writes SQL that looks right and returns a wrong number. From our tests on a workforce dataset, where both models we tried made the same kind of mistake:</p>
+    <table class="booktabs wide">
+      <thead><tr><th>Question</th><th>Without instructions, the models</th><th>What the business means</th></tr></thead>
+      <tbody>
+        <tr><td>“Junior roles”</td><td>guessed low level numbers, such as 1 to 3</td><td>levels 6 and 7</td></tr>
+        <tr><td>“Regular employees”</td><td>filtered on the word “Regular”, which is not in the data</td><td>employment type <code>FT</code></td></tr>
+      </tbody>
+    </table>
+    <p>Neither is really a model failure. The model is guessing, because the answer cannot be found by reading the schema. Other rules, such as “current means the latest snapshot”, guard against mistakes a model makes only some of the time.</p>
+  </section>
+
+  <section>
+    <h2>The solution</h2>
+
+    <h3>Stored once, read everywhere</h3>
+    <p>Users write the rules in the product’s interface. When a dataset is enriched, its rules are added to the dataset’s shared description, the same description every service already reads. Every feature that answers questions follows the same rules, and a rule changed in one place applies everywhere.</p>
+
+    <h3>Used at every step that makes a choice</h3>
+    <p>A rule can matter before any SQL is written, so it is used at each step where the system chooses something:</p>
+    <ul>
+      <li>finding the dataset that can answer the question;</li>
+      <li>choosing between similar columns or values;</li>
+      <li>writing the SQL.</li>
+    </ul>
+    <p>In each prompt, the rules are stated as requirements the answer must meet, not as background the model can weigh against its own guesses.</p>
+
+    <h3>Tested, not assumed</h3>
+    <p>For several datasets we wrote rules and test questions, each with the SQL we expected. Every question ran with and without the rules, on two different models, and the results were compared. The tests included questions that need several rules at once, such as the current headcount of junior roles.</p>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+    <p>Business users can ask questions in their own terms and get answers grounded in their definitions, without rephrasing them in column names and codes. In the workforce tests, the questions both models answered wrongly without the rules came out right with them.</p>
+  </section>
+
+  <footer class="colophon"><a href="/">Hussain Abuwala</a></footer>
+</article>
+<script src="/assets/synonyms.js?v=f3bd44dc"></script>
+<script src="/assets/site.js?v=11e1b8cf"></script>
+</body>
+</html>

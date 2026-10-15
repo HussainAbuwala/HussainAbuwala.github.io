@@ -29,8 +29,19 @@ body { margin: 0 auto; padding: 0 0 0 12.5%; width: 87.5%; max-width: 1400px; ba
 .back a:link, .back a:visited { background: none; color: var(--soft); }
 .contact { margin: -1.4rem 0 2.6rem; font-size: 1.1rem; font-variant: small-caps; letter-spacing: .06em; text-transform: lowercase; color: var(--soft); }
 .contact a:link, .contact a:visited { background: none; color: var(--soft); }
-.contact .sep { margin: 0 .2rem; color: var(--faint); }
-.contact .addr { font-variant: normal; text-transform: none; letter-spacing: 0; font-family: var(--lf); }
+.contact { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.1rem; }
+.contact a { display: inline-flex; align-items: center; gap: .4rem; }
+.contact svg { display: block; flex: none; }
+.contact a.icon { padding: .2rem 0; }
+.contact .gh svg { color: #181717; }
+.contact .yt svg { color: #ff0000; }
+.contact .li svg { color: #0a66c2; }
+.contact .addr svg, .contact .cv svg { color: var(--ink); }
+.contact .cv { font-variant: normal; text-transform: none; letter-spacing: 0; font-family: var(--lf); }
+#tailor-slot:empty { display: none; }
+svg.inline-yt { color: #ff0000; vertical-align: -.2em; margin-right: .3em; }
+@media (max-width: 560px) { .contact .addr { flex-basis: 100%; } }
+.contact .addr { font-variant: normal; text-transform: none; letter-spacing: 0; font-family: var(--lf); margin-right: .3rem; }
 
 /* ---------- headings ---------- */
 h1 { font-weight: 400; font-size: 3.2rem; line-height: 1; margin: 4.4rem 0 1.5rem; }
@@ -130,33 +141,17 @@ button.video:hover::after { background: #fff; }
 .relevant::before { content: 'relevant'; position: absolute; left: -7.2rem; top: .35rem; width: 6.2rem; text-align: right; font-size: .95rem; font-variant: small-caps; letter-spacing: .06em; color: var(--red); }
 mark.match { background: var(--mark); color: inherit; padding: 0 .08em; border-radius: 2px; }
 
-/* ---------- outside-work doodles ---------- */
-:root { --rust: #b4512f; --ochre: #c4933f; --slate: #46606d; }
-section > .doodles { width: 55%; }
-.doodles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.6rem 1.4rem; }
-.doodle { margin: 0; max-width: none; text-align: center; cursor: default; }
-.doodle svg { width: 100%; max-width: 104px; height: auto; display: block; margin: 0 auto; overflow: visible; }
-.doodle svg * { fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-.doodle .ink { stroke: var(--ink); }
-.doodle .acc.rust { stroke: var(--rust); }
-.doodle .acc.ochre { stroke: var(--rust); }
-.doodle .acc.slate { stroke: var(--rust); }
-.doodle svg { transition: transform .3s ease; }
-.doodle:hover svg { transform: rotate(-3deg) scale(1.04); }
-.doodle figcaption { float: none; max-width: none; margin: .4rem 0 0; font-size: 1.05rem; line-height: 1.35; color: var(--soft); }
-@media (max-width: 760px) {
-  section > .doodles { width: 100%; }
-  .doodles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
+/* ---------- accent colour ---------- */
+:root { --rust: #b4512f; }
 
 /* ---------- footer ---------- */
 footer.colophon { width: 55%; border-top: 1px solid var(--hair); margin: 3rem 0 4rem; padding-top: 1.2rem; font-size: 1.1rem; line-height: 1.6; color: var(--soft); }
 footer.colophon a:link, footer.colophon a:visited { margin-right: .9rem; color: var(--soft); }
 footer.colophon pre { font: .95rem/1.5 var(--mono); color: var(--ink); margin: .6rem 0 1.2rem; white-space: pre-wrap; }
 
-/* ---------- phones: margin text folds behind a tap, figures stay visible ---------- */
-@media (max-width: 760px) {
-  body { width: 84%; padding-left: 8%; padding-right: 8%; }
+/* ---------- phones and tablets: one column; margin text folds behind a tap, figures stay visible ---------- */
+@media (max-width: 1000px) {
+  body { width: 100%; max-width: 46rem; padding-left: 20px; padding-right: 20px; }
   .back, p.subtitle, section > p, section > ol, section > ul, section > dl, section > .eq, section > figure:not(.fullwidth), section > blockquote, section > table, section > .item, section > .role, section > .tailor, footer.colophon { width: 100%; }
   figure, figure.fullwidth, table.booktabs { max-width: 100%; width: 100% !important; }
   figure.fullwidth figcaption { margin-right: 0; }
@@ -181,8 +176,6 @@ footer.colophon pre { font: .95rem/1.5 var(--mono); color: var(--ink); margin: .
   .back, .video { display: none; }
 }
 
-#outside { clear: both; }
-
 /* ---------- accent: the rust red from the film, for note numbers ---------- */
 .sidenote-number::after, .sidenote::before { color: var(--rust); }
 
@@ -196,3 +189,30 @@ mark.hl {
 }
 /* in a tailored link, only the job's keywords are marked */
 .has-match mark.hl { background: none; padding: 0; margin: 0; }
+
+/* ---------- match to a job description ---------- */
+details.jd { width: 55%; margin: -.4rem 0 1rem; font-size: 1.2rem; }
+details.jd summary { cursor: pointer; font-style: italic; color: var(--soft); list-style: none; }
+details.jd summary::-webkit-details-marker { display: none; }
+details.jd summary::before { content: '+ '; font-style: normal; }
+details.jd[open] summary::before { content: '− '; }
+.jd-help { display: block; margin: .6rem 0 .5rem; font-size: 1.05rem; line-height: 1.5; color: var(--soft); }
+#jd-text { width: 100%; font: 1rem/1.45 var(--lf); padding: .6rem .7rem; border: 1px solid var(--hair); border-radius: 3px; resize: vertical; color: var(--ink); background: #fff; }
+#jd-text:focus { outline: none; border-color: var(--soft); }
+#jd-go { margin-top: .5rem; font: 1.1rem var(--serif); padding: .3rem .9rem; border: 1px solid var(--ink); border-radius: 3px; background: #fff; color: var(--ink); cursor: pointer; }
+.jd-msg { font-size: 1.05rem; color: var(--soft); margin: .5rem 0 0; }
+.tailor .fit { font-size: 1.15rem; line-height: 1.6rem; color: var(--soft); margin: -.2rem 0 .5rem; }
+@media (max-width: 1000px) { details.jd { width: 100%; } }
+
+/* ---------- phones: text tables become stacked rows (site.js adds .stacked) ---------- */
+@media (max-width: 600px) {
+  table.stacked, table.stacked tbody, table.stacked tr, table.stacked td { display: block; width: 100% !important; }
+  table.stacked thead { display: none; }
+  table.stacked { border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+  table.stacked tr { padding: .7rem 0 .8rem; border-bottom: 1px solid var(--hair); }
+  table.stacked tr:last-child { border-bottom: 0; }
+  table.stacked td { padding: .1rem 0 !important; white-space: normal !important; text-align: left !important; }
+  table.stacked td:empty { display: none; }
+  table.stacked td:first-child { font-style: italic; padding-bottom: .3rem !important; }
+  table.stacked td:not(:first-child)::before { content: attr(data-label); display: block; margin-top: .3rem; font-size: .95rem; font-style: normal; font-variant: small-caps; letter-spacing: .05em; text-transform: lowercase; color: var(--soft); }
+}

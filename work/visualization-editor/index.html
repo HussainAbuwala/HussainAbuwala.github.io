@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visualization Editor · Hussain Abuwala</title>
+<meta name="description" content="A chart editor for query results in IBM watsonx.data, with rule-based chart recommendations that run in the browser.">
+<link rel="canonical" href="https://hussainabuwala.github.io/work/visualization-editor/">
+<link rel="stylesheet" href="/assets/tufte.css?v=9fceb4cb">
+<style>
+  table.booktabs.wide { width: 90%; font-size: 1.1rem; line-height: 1.5; }
+  table.booktabs.wide td { padding-bottom: .45rem; }
+  ul li { padding: .3rem 0; }
+  @media (min-width: 1001px) { table.booktabs.wide td:first-child { white-space: nowrap; } }
+</style>
+</head>
+<body>
+<article>
+  <div class="back"><a href="/">← Hussain Abuwala</a></div>
+  <h1>Visualization Editor</h1>
+  <p class="subtitle">Charts from a query result, without leaving the data platform. IBM.</p>
+
+  <section>
+    <p><span class="newthought">After running a query</span> in IBM watsonx.data, users can turn the result into a chart in the same place. The editor opens with a recommended chart already drawn, and every choice can be changed by hand. We built the editor and the recommendation behind it, which runs in the browser on rules, not on a model.</p>
+    <p class="tools">React · JavaScript · MobX · Carbon Charts</p>
+  </section>
+
+  <section>
+    <h2>Why it matters</h2>
+    <p>Users write SQL on the platform to extract, clean and prepare data. To see it as a chart, they moved the result to a separate BI tool, built charts and dashboards there, and shared them from there. Any change to the query meant going back to the platform, running it again and moving the data again. Charting a result where the query runs removes that round trip.</p>
+  </section>
+
+  <section>
+    <h2>The problem</h2>
+    <p>A query result is just column names, sometimes types, and rows. Nothing says what each column means, and a chart drawn from a wrong guess looks fine and says the wrong thing:</p>
+    <ul>
+      <li><b>Names and types mislead.</b> A numeric customer ID is not a quantity, a year stored as a number is time, and a text column can hold dates.</li>
+      <li><b>Some numbers cannot be added.</b> Summing percentages, averages or rates gives a number with no meaning.</li>
+      <li><b>Results are often already aggregated.</b> Aggregating them again is sometimes right, as with a sum of sums, and sometimes wrong, as with an average of averages.</li>
+      <li><b>Order carries meaning.</b> Months sorted alphabetically start with April and August.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The solution</h2>
+
+    <h3>Rules in the browser, not a model</h3>
+    <p>We first built a recommender that used an LLM. Every chart would have added a model call to the customer’s cost, so we replaced it with rules that run in the browser. A recommendation costs nothing and appears as soon as the result does.</p>
+
+    <h3>Working out what each column is</h3>
+    <p>Every column becomes a measure, a category or time. The evidence is checked from most to least reliable, and the first rule that applies decides:</p>
+    <table class="booktabs wide">
+      <thead><tr><th>Evidence</th><th>Example</th><th>Decision</th></tr></thead>
+      <tbody>
+        <tr><td>Declared type</td><td>a date or timestamp column</td><td>time</td></tr>
+        <tr><td>Name marks a label</td><td>customer ID, postal code</td><td>category, even if numeric</td></tr>
+        <tr><td>Shape of the values</td><td>text that is nearly always a date</td><td>time</td></tr>
+        <tr><td>Name marks time or a quantity</td><td>order month, total revenue</td><td>time, or measure</td></tr>
+        <tr><td>Numbers</td><td>a numeric type, or values that are numbers</td><td>measure</td></tr>
+        <tr><td>Nothing else applies</td><td></td><td>category</td></tr>
+      </tbody>
+    </table>
+    <p>Measures are also marked when they look like percentages or like values that cannot be summed, such as averages and rates. The rules read a sample of the result, so they stay fast on large results.</p>
+
+    <h3>Reading the query</h3>
+    <p>The SQL says directly what the column names only hint at. Columns in the <code>GROUP BY</code> are categories, and aggregated expressions are measures. The function used tells the editor how the measure can be aggregated again, and it fills that in:</p>
+    <table class="booktabs wide">
+      <thead><tr><th>In the query</th><th>Aggregated again by</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>SUM or COUNT</td><td>sum</td><td>sub-totals add up to the total</td></tr>
+        <tr><td>MIN or MAX</td><td>the same function</td><td>the minimum of minimums is the minimum</td></tr>
+        <tr><td>AVG or COUNT DISTINCT</td><td>not allowed</td><td>it would change what the number means</td></tr>
+        <tr><td>a raw column</td><td>the column’s usual aggregation</td><td>sum for revenue, average for a rate</td></tr>
+      </tbody>
+    </table>
+    <p>Charts that would need an aggregation marked as not allowed are not recommended.</p>
+
+    <h3>Choosing the chart</h3>
+    <p>Each chart type that fits the columns gets a score, and the editor opens on the highest:</p>
+    <table class="booktabs wide">
+      <thead><tr><th>Data</th><th>Chart</th></tr></thead>
+      <tbody>
+        <tr><td>a measure over time</td><td>line</td></tr>
+        <tr><td>a measure by category</td><td>bar, ranked lower when there are many categories</td></tr>
+        <tr><td>shares of a whole, few categories</td><td>pie or donut</td></tr>
+        <tr><td>two measures</td><td>scatter</td></tr>
+      </tbody>
+    </table>
+    <p>A chart that uses only some of the result’s columns ranks below one that uses all of them. The other chart types are one click away, already filled in where the data fits.</p>
+
+    <h3>Sorting by meaning</h3>
+    <p>Columns whose values are months, weekdays or seasons are recognised from the values and sorted in calendar order, unless a user has set an order of their own. Pie and donut slices keep that order too, which needed the order passed into the drawing step, because the charting library sorts slices by size on its own.</p>
+
+    <h3>Changing it by hand</h3>
+    <p>Users can pick any chart type (bar, grouped or stacked bar, line, area, scatter, pie, donut or a table), choose the fields and the aggregation, sort by label or by value, and set a title and axis labels. Aggregation runs in the browser, so changing a field redraws the chart without running the query again.</p>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+    <p>Users can chart a query result where they wrote the query, starting from a sensible chart, with no added model cost. The first version covers single charts; dashboards are not part of it.</p>
+  </section>
+
+  <footer class="colophon"><a href="/">Hussain Abuwala</a></footer>
+</article>
+<script src="/assets/synonyms.js?v=f3bd44dc"></script>
+<script src="/assets/site.js?v=11e1b8cf"></script>
+</body>
+</html>

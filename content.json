@@ -96,25 +96,26 @@
             "Prompt engineering",
             "SQL generation",
             "Backend"
-          ]
+          ],
+          "page": "/work/custom-instructions/"
         },
         {
           "id": "viz-editor",
           "role": 0,
           "title": "Visualization editor",
-          "summary": "A chart editor for IBM watsonx.data with manual authoring and automatic chart recommendations, using metadata enrichment, aggregation selection, semantic sorting and type inference.",
-          "resume": "Built a visualization editor for IBM watsonx.data with manual authoring and automatic chart recommendations based on metadata enrichment, aggregation selection, semantic sorting, and numerical, categorical, and identifier type inference.",
+          "summary": "A chart editor for query results in IBM watsonx.data. Charts are drawn by hand or recommended by rules in the browser, which read column types, the SQL’s grouping and aggregation, and the natural order of values.",
+          "resume": "Built a React visualization editor for IBM watsonx.data with manual authoring and rule-based chart recommendations in the browser, inferring measures and categories from column types, values and SQL grouping, at no model cost.",
           "stack": [
             "React",
-            "Node.js",
-            "LLMs"
+            "JavaScript",
+            "MobX",
+            "Carbon Charts"
           ],
           "priority": 6,
           "tags": [
-            "Frontend",
-            "Prompt engineering",
-            "Backend"
-          ]
+            "Frontend"
+          ],
+          "page": "/work/visualization-editor/"
         },
         {
           "id": "number-formatting",
@@ -132,7 +133,9 @@
           "tags": [
             "Prompt engineering",
             "Backend"
-          ]
+          ],
+          "page": "/work/number-formatting/",
+          "key": "unblocked a prospective customer"
         },
         {
           "id": "enrichment-service",
@@ -294,7 +297,9 @@
       "genai",
       "gen ai",
       "generative ai",
-      "gpt"
+      "gpt",
+      "language model",
+      "language models"
     ],
     "Node.js": [
       "node",
